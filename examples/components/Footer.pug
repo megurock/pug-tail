@@ -1,0 +1,24 @@
+//- Footer Component
+//- 
+//- This component demonstrates accessing global data directly from components.
+//- See Header.pug for detailed explanation of how this works.
+//- 
+//- ⚠️ Note: This creates implicit dependencies on global data structure.
+//- Best practice: Pass data via props for better reusability.
+
+component Footer()
+  //- Access global data via 'global' key
+  - const year = new Date().getFullYear()
+  footer.bg-gray-50.border-t.border-gray-200.mt-12
+    .container.mx-auto.px-6.py-8
+      .text-center
+        p.text-gray-600.mb-4
+          | Made with ❤️ by
+          a.text-blue-600.hover_text-blue-800.font-semibold(href=global.footerInfo.authorUrl target="_blank")= global.footerInfo.authorName
+
+        if global.footerInfo.links && global.footerInfo.links.length > 0
+          .flex.justify-center.gap-6.text-sm
+            each link in global.footerInfo.links
+              a.text-gray-600.hover_text-blue-600.transition-colors(href=link.href target="_blank")= link.text
+
+        p.text-gray-500.text-sm.mt-4 © #{year} #{global.siteName}. All rights reserved.

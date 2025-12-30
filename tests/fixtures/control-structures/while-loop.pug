@@ -1,0 +1,10 @@
+component Card()
+  - const { title } = $props
+  .card
+    h3= title
+
+- let counter = 0
+
+while counter < 3
+  Card(title=`Loop ${counter + 1}`)
+  - counter++

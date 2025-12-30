@@ -1,0 +1,15 @@
+- const title = "Override Title"
+- const description = "From frontmatter"
+
+doctype html
+html
+  head
+    title= title
+    meta(name="description" content=description)
+  body
+    h1= title
+    p= description
+    if siteName
+      p Site: #{siteName}
+    if year
+      p Year: #{year}

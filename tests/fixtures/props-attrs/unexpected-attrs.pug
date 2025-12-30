@@ -1,0 +1,7 @@
+component Card()
+  - const { title } = $props
+
+  .card&attributes($attrs)
+    h2= title
+
+Card(title="Test", data-test="card-test", aria-label="Card")

@@ -1,0 +1,103 @@
+{
+  "name": "pug-tail",
+  "version": "0.1.0-alpha.0",
+  "type": "module",
+  "description": "A transpiler that statically expands component DSL with slot syntax on Pug AST",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "pug-tail": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "docs/CONFIGURATION.md",
+    "docs/COMPONENTS.md"
+  ],
+  "scripts": {
+    "prepare": "lefthook install",
+    "prepublishOnly": "npm run build && npm test",
+    "start": "npm run test:dev",
+    "prebuild": "rimraf ./dist",
+    "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "test": "vitest run",
+    "pretest:coverage": "rimraf ./coverage",
+    "test:coverage": "vitest run --coverage",
+    "test:dev": "vitest --ui",
+    "check": "biome check && npm run check:types",
+    "check:format": "biome format",
+    "check:lint": "biome lint",
+    "check:types": "tsc --noEmit",
+    "fix": "biome check --write",
+    "playground": "node playground/verify-ast.mjs",
+    "playground:ts": "tsx playground/verify-ast.ts"
+  },
+  "keywords": [
+    "pug",
+    "pugjs",
+    "template",
+    "component",
+    "slot",
+    "slots",
+    "transpiler",
+    "ast",
+    "build-tool",
+    "static-expansion",
+    "zero-runtime",
+    "vue-like",
+    "props",
+    "attributes"
+  ],
+  "author": "Eiji Meguro <e.meguro@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/megurock/pug-tail.git"
+  },
+  "bugs": {
+    "url": "https://github.com/megurock/pug-tail/issues"
+  },
+  "homepage": "https://github.com/megurock/pug-tail#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.26.0",
+    "@babel/traverse": "^7.26.0",
+    "@babel/types": "^7.26.0",
+    "chokidar": "^3.5.3",
+    "glob": "^10.3.10",
+    "minimatch": "^10.1.1",
+    "pug-code-gen": "^3.0.3",
+    "pug-lexer": "^5.0.1",
+    "pug-load": "^3.0.0",
+    "pug-parser": "^6.0.0",
+    "pug-walk": "^2.0.0",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.10",
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "@types/babel__traverse": "^7.20.5",
+    "@types/glob": "^8.1.0",
+    "@types/node": "^25.0.3",
+    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/ui": "^4.0.16",
+    "commitlint": "^20.2.0",
+    "lefthook": "^2.0.13",
+    "rimraf": "^6.1.2",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.16"
+  }
+}

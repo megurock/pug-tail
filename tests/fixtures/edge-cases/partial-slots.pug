@@ -1,0 +1,14 @@
+component Card()
+  .card
+    slot(header)
+      p Default Header
+    slot(body)
+      p Default Body
+    slot(footer)
+      p Default Footer
+
+Card()
+  slot(header)
+    h1 Title
+  // body and footer are not provided, so defaults are used
+

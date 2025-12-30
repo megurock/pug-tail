@@ -1,0 +1,16 @@
+component Card()
+  - const { title } = $props
+  .card
+    h3= title
+
+- const items = ['X', 'Y', 'Z']
+
+each item, index in items
+  case index
+    when 0
+      if true
+        Card(title=`${item} First`)
+    when 1
+      Card(title=`${item} Middle`)
+    default
+      Card(title=`${item} Last`)

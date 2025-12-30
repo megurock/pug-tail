@@ -1,0 +1,36 @@
+{
+  "siteName": "PugTail",
+  "siteUrl": "https://github.com/megurock/pug-tail",
+  "navigation": [
+    {
+      "label": "Home",
+      "url": "index.html"
+    },
+    {
+      "label": "Slots & Props",
+      "url": "about.html"
+    },
+    {
+      "label": "CLI Guide",
+      "url": "cli-guide.html"
+    }
+  ],
+  "footerInfo": {
+    "authorName": "megurock",
+    "authorUrl": "https://github.com/megurock",
+    "links": [
+      {
+        "text": "GitHub",
+        "href": "https://github.com/megurock/pug-tail"
+      },
+      {
+        "text": "npm",
+        "href": "https://www.npmjs.com/package/pug-tail"
+      },
+      {
+        "text": "MIT License",
+        "href": "https://github.com/megurock/pug-tail/blob/main/LICENSE"
+      }
+    ]
+  }
+}

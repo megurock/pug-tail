@@ -1,0 +1,11 @@
+component Card()
+  - const { title } = $props
+  .card
+    h3= title
+
+- const condition = true
+
+if condition
+  Card(title="Condition True")
+else
+  Card(title="Condition False")

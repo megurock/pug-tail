@@ -1,0 +1,11 @@
+component Button()
+  - const { primary } = attributes
+  if primary
+    button.btn-primary
+      slot
+  else
+    button.btn-default
+      slot
+
+Button(primary=true)
+  | Click Me

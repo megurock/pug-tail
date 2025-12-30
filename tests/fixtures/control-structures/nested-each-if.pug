@@ -1,0 +1,12 @@
+component Card()
+  - const { title } = $props
+  .card
+    h3= title
+
+- const items = ['A', 'B', 'C']
+
+each item, index in items
+  if index % 2 === 0
+    Card(title=`${item} Even`)
+  else
+    Card(title=`${item} Odd`)

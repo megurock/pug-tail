@@ -1,0 +1,13 @@
+component Card()
+  - const { variant } = $props
+  .card= variant
+
+- const items = ['primary', 'secondary', 'success']
+
+each item in items
+  if item === 'primary'
+    Card(variant='primary')
+  else if item === 'secondary'
+    Card(variant='secondary')
+  else
+    Card(variant='default')

@@ -1,0 +1,207 @@
+{
+  "pageTitle": "CLI Guide - PugTail",
+  "pageDescription": "Complete guide to PugTail CLI options, configuration, and best practices",
+  "header": {
+    "title": "📘 CLI Guide",
+    "subtitle": "Learn how to use PugTail from the command line",
+    "description": "Complete guide to PugTail CLI options, configuration, and best practices",
+    "backLink": {
+      "text": "← Back to Home",
+      "href": "index.html"
+    }
+  },
+  "sections": [
+    {
+      "id": "installation",
+      "icon": "📦",
+      "title": "Installation",
+      "description": "Install PugTail via npm or yarn",
+      "commands": [
+        {
+          "title": "Using npm:",
+          "code": "npm install pug-tail"
+        },
+        {
+          "title": "Using yarn:",
+          "code": "yarn add pug-tail"
+        }
+      ]
+    },
+    {
+      "id": "basic-usage",
+      "icon": "🚀",
+      "title": "Basic Usage",
+      "description": "Simple commands to get started",
+      "commands": [
+        {
+          "title": "Compile a single file:",
+          "code": "npx pug-tail src/index.pug -o dist/index.html"
+        },
+        {
+          "title": "Compile a directory:",
+          "code": "npx pug-tail src -o dist"
+        },
+        {
+          "title": "Using a config file:",
+          "code": "npx pug-tail -c pugtail.config.js"
+        }
+      ]
+    },
+    {
+      "id": "cli-options",
+      "icon": "⚙️",
+      "title": "CLI Options",
+      "description": "Main command-line options",
+      "options": [
+        {
+          "flag": "-o, --out <dir>",
+          "description": "Output directory or file path"
+        },
+        {
+          "flag": "-w, --watch",
+          "description": "Watch mode - recompile on file changes"
+        },
+        {
+          "flag": "-c, --config <path>",
+          "description": "Path to config file (pugtail.config.js)"
+        },
+        {
+          "flag": "--obj <path>",
+          "description": "Data file (JSON/YAML) to inject into templates"
+        },
+        {
+          "flag": "--pretty",
+          "description": "Pretty-print the output HTML"
+        },
+        {
+          "flag": "--basedir <path>",
+          "description": "Base directory for absolute includes"
+        },
+        {
+          "flag": "-d, --debug",
+          "description": "Enable debug output for troubleshooting"
+        }
+      ]
+    },
+    {
+      "id": "config-file",
+      "icon": "📝",
+      "title": "Config File",
+      "description": "Using pugtail.config.js for project settings",
+      "example": {
+        "title": "Example pugtail.config.js:",
+        "code": "export default {\n  files: {\n    input: 'src/**/*.pug',\n    output: 'dist',\n    root: 'src/pages'\n  },\n  basedir: '.',\n  pretty: true,\n  data: './data/global.json'\n}"
+      },
+      "notes": [
+        "Config file paths are relative to the config file location",
+        "CLI options override config file settings",
+        "Supports both .js and .mjs extensions"
+      ]
+    },
+    {
+      "id": "data-loading",
+      "icon": "💾",
+      "title": "Data Loading",
+      "description": "Two ways to load JSON data into your templates",
+      "methods": [
+        {
+          "title": "1. Global data via config:",
+          "code": "// pugtail.config.js\nexport default {\n  data: './data/global.json'\n}",
+          "note": "Available in all templates"
+        },
+        {
+          "title": "2. Per-page data via $dataFiles:",
+          "code": "//- pages/index.pug\n- const $dataFiles = ['/data/page.json']\n\nh1= pageTitle",
+          "note": "Only available in entry files (not included components)"
+        }
+      ],
+      "tips": [
+        "Combine both methods: global data for site-wide settings, $dataFiles for page-specific content",
+        "Absolute paths in $dataFiles (starting with /) are resolved from basedir",
+        "Relative paths are resolved from the entry file location"
+      ]
+    },
+    {
+      "id": "watch-mode",
+      "icon": "👁️",
+      "title": "Watch Mode",
+      "description": "Automatic recompilation during development",
+      "commands": [
+        {
+          "title": "Enable watch mode:",
+          "code": "npx pug-tail src -o dist -w"
+        },
+        {
+          "title": "Watch with config:",
+          "code": "npx pug-tail -c pugtail.config.js -w"
+        }
+      ],
+      "features": [
+        "Monitors file changes in real-time",
+        "Automatically recompiles on save",
+        "Debounced to prevent multiple rebuilds",
+        "Press Ctrl+C to stop watching"
+      ]
+    },
+    {
+      "id": "examples",
+      "icon": "💡",
+      "title": "Examples",
+      "description": "Common use cases and patterns",
+      "useCases": [
+        {
+          "title": "Static site with global navigation:",
+          "steps": [
+            "Create data/global.json with navigation data",
+            "Set data: './data/global.json' in config",
+            "Use navigation variable in Layout component"
+          ]
+        },
+        {
+          "title": "Blog with per-post metadata:",
+          "steps": [
+            "Create data/posts/post-1.json for each post",
+            "Use $dataFiles in each post template",
+            "Access post-specific data like title, date, author"
+          ]
+        },
+        {
+          "title": "Multi-language site:",
+          "steps": [
+            "Create data/en.json and data/ja.json",
+            "Use $dataFiles to load language-specific content",
+            "Generate separate HTML files for each language"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tips",
+      "icon": "✨",
+      "title": "Tips & Tricks",
+      "description": "Best practices for using PugTail",
+      "tips": [
+        {
+          "title": "Organize components:",
+          "content": "Keep components in a dedicated folder like components/ and use include to load them"
+        },
+        {
+          "title": "Use glob patterns:",
+          "content": "In config files, use patterns like **/*.pug to match all .pug files recursively"
+        },
+        {
+          "title": "Separate data concerns:",
+          "content": "Use global.json for site-wide data (navigation, footer), page-specific JSON for content"
+        },
+        {
+          "title": "Debug with --debug:",
+          "content": "When things don't work as expected, use the -d flag to see detailed processing information"
+        },
+        {
+          "title": "Pretty print for development:",
+          "content": "Use --pretty flag during development for readable HTML output"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slots &amp; Props - PugTail</title>
+    <meta name="description" content="Learn how to use named slots and props in PugTail components">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      [class*="hover_"] { transition: all 0.2s; }
+      .hover_shadow-xl:hover { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+      .hover_shadow-lg:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+      .hover_scale-105:hover { transform: scale(1.05); }
+      .hover_border-blue-200:hover { border-color: rgb(191 219 254); }
+      .hover_bg-blue-700:hover { background-color: rgb(29 78 216); }
+      .hover_bg-blue-800:hover { background-color: rgb(30 64 175); }
+      .hover_bg-blue-50:hover { background-color: rgb(239 246 255); }
+      .hover_bg-opacity-30:hover { background-color: rgba(255, 255, 255, 0.3); }
+      .hover_bg-opacity-90:hover { background-color: rgba(255, 255, 255, 0.9); }
+      .hover_text-blue-600:hover { color: rgb(37 99 235); }
+      .hover_text-blue-800:hover { color: rgb(30 64 175); }
+    </style>
+  </head>
+  <body>
+    <header class="bg-white shadow-sm">
+      <div class="container mx-auto px-6 py-4">
+        <nav class="flex items-center justify-between">
+          <div class="flex items-center space-x-8"><a class="text-xl font-bold text-blue-600" href="https://github.com/megurock/pug-tail">PugTail</a>
+            <div class="flex space-x-6"><a class="text-gray-600 hover_text-blue-600 transition-colors" href="index.html">Home</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="about.html">Slots &amp; Props</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="cli-guide.html">CLI Guide</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <div class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen py-12 px-4">
+        <div class="max-w-4xl mx-auto">
+          <header class="text-center mb-12"><a class="inline-block text-blue-600 hover_text-blue-800 mb-4" href="index.html">← Back to Home</a>
+            <h1 class="text-5xl font-bold text-gray-900 mb-4">🎯 Slots &amp; Props</h1>
+            <p class="text-xl text-gray-600">Learn how to use named slots and props in PugTail components</p>
+          </header>
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">📦 Props</h2>
+            <p class="text-gray-700 mb-6">Props are passed as attributes and accessed via <code class="bg-gray-200 px-2 py-1 rounded">$props</code>
+            </p>
+            <p class="text-gray-700 mb-6">Component Definition:</p>
+            <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+              <pre><code class="language-pug">component Card()
+  - const { title, variant } = $props
+  div(class=`card-${variant}`)
+    h3= title</code></pre>
+            </div>
+            <p class="text-gray-700 mb-6">Usage:</p>
+            <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+              <pre><code class="language-pug">Card(title=&quot;Hello&quot; variant=&quot;primary&quot;)</code></pre>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-lg">
+              <p class="text-gray-600 mb-4 font-semibold">Result:</p>
+              <div class="block rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border bg-blue-50 border-blue-200 hover_shadow-lg">
+                <h3 class="text-xl font-bold mb-2 text-blue-900">Primary Card</h3>
+                <p>This card uses the 'primary' variant prop</p>
+              </div>
+              <div class="block rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border bg-green-50 border-green-200 hover_shadow-lg">
+                <h3 class="text-xl font-bold mb-2 text-green-900">Success Card</h3>
+                <p>This card uses the 'success' variant prop</p>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">🎰 Named Slots</h2>
+            <p class="text-gray-700 mb-6">Components can have multiple named slots for flexible content insertion
+            </p>
+            <p class="text-gray-700 mb-6">Component with slots:</p>
+            <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+              <pre><code class="language-pug">component Card()
+  .card
+    slot(content)
+    if hasFooter
+      .footer
+        slot(footer)</code></pre>
+            </div>
+            <p class="text-gray-700 mb-6">Usage with slot content:</p>
+            <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+              <pre><code class="language-pug">Card(hasFooter=true)
+  slot(content)
+    p Main content
+  slot(footer)
+    button Click me</code></pre>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-lg">
+              <p class="text-gray-600 mb-4 font-semibold">Result:</p>
+              <div class="block rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border bg-white border-gray-200 hover_shadow-lg">
+                <h3 class="text-xl font-bold mb-2 text-gray-900">Card with Footer</h3>
+                <p>This card has content in the main slot...</p>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                  <button class="bg-blue-600 text-white px-4 py-2 rounded hover_bg-blue-700 transition-colors">Learn More →</button>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">💡 Default Slot Content</h2>
+            <p class="text-gray-700 mb-6">Slots can have default content that appears when no content is provided
+            </p>
+            <div class="bg-white rounded-lg p-6 shadow-lg">
+              <p class="text-gray-600 mb-4 font-semibold">Card with default content:</p>
+              <div class="block rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border bg-white border-gray-200 hover_shadow-lg">
+                <h3 class="text-xl font-bold mb-2 text-gray-900">Default Content Example</h3>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">🔍 Conditional Slots (if/else)</h2>
+            <p class="text-gray-700 mb-6">Slots can be placed inside control structures like if/else statements
+            </p>
+            <p class="text-gray-700 mb-6">Component with conditional slot:</p>
+            <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+              <pre><code class="language-pug">component Card()
+  - const { hasFooter = false } = $props
+  .card
+    slot(content)
+    if hasFooter
+      .footer
+        slot(footer)</code></pre>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-lg">
+              <p class="text-gray-600 mb-4 font-semibold mt-6">Without footer (hasFooter=false):</p>
+              <div class="block rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border bg-white border-gray-200 hover_shadow-lg">
+                <h3 class="text-xl font-bold mb-2 text-gray-900">No Footer</h3>
+                <p>This card has no footer (hasFooter defaults to false)</p>
+              </div>
+              <p class="text-gray-600 mb-4 font-semibold mt-6">With footer (hasFooter=true):</p>
+              <div class="block rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border bg-green-50 border-green-200 hover_shadow-lg">
+                <h3 class="text-xl font-bold mb-2 text-green-900">With Footer</h3>
+                <p>This card has a footer controlled by the hasFooter prop!</p>
+                <div class="mt-4 pt-4 border-t border-green-300"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="bg-gray-50 border-t border-gray-200 mt-12">
+      <div class="container mx-auto px-6 py-8">
+        <div class="text-center">
+          <p class="text-gray-600 mb-4">Made with ❤️ by<a class="text-blue-600 hover_text-blue-800 font-semibold" href="https://github.com/megurock" target="_blank">megurock</a></p>
+          <div class="flex justify-center gap-6 text-sm"><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://github.com/megurock/pug-tail" target="_blank">GitHub</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://www.npmjs.com/package/pug-tail" target="_blank">npm</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://github.com/megurock/pug-tail/blob/main/LICENSE" target="_blank">MIT License</a>
+          </div>
+          <p class="text-gray-500 text-sm mt-4">© 2026 PugTail. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

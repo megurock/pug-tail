@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PugTail - Component System for Pug</title>
+    <meta name="description" content="Build-time component system for Pug templates with slots, props, and zero runtime overhead">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      [class*="hover_"] { transition: all 0.2s; }
+      .hover_shadow-xl:hover { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+      .hover_shadow-lg:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+      .hover_scale-105:hover { transform: scale(1.05); }
+      .hover_border-blue-200:hover { border-color: rgb(191 219 254); }
+      .hover_bg-blue-700:hover { background-color: rgb(29 78 216); }
+      .hover_bg-blue-800:hover { background-color: rgb(30 64 175); }
+      .hover_bg-blue-50:hover { background-color: rgb(239 246 255); }
+      .hover_bg-opacity-30:hover { background-color: rgba(255, 255, 255, 0.3); }
+      .hover_bg-opacity-90:hover { background-color: rgba(255, 255, 255, 0.9); }
+      .hover_text-blue-600:hover { color: rgb(37 99 235); }
+      .hover_text-blue-800:hover { color: rgb(30 64 175); }
+    </style>
+  </head>
+  <body>
+    <header class="bg-white shadow-sm">
+      <div class="container mx-auto px-6 py-4">
+        <nav class="flex items-center justify-between">
+          <div class="flex items-center space-x-8"><a class="text-xl font-bold text-blue-600" href="https://github.com/megurock/pug-tail">PugTail</a>
+            <div class="flex space-x-6"><a class="text-gray-600 hover_text-blue-600 transition-colors" href="index.html">Home</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="about.html">Slots &amp; Props</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="cli-guide.html">CLI Guide</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <div class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+        <section class="container mx-auto px-6 py-20 text-center">
+          <div class="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mb-6">⚡ Zero Runtime • Build-time Components</div>
+          <h1 class="text-6xl font-bold text-gray-900 mb-6">PugTail<span class="block text-4xl text-blue-600 mt-2">Component System for Pug</span>
+          </h1>
+          <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">Build maintainable templates with reusable components, slots, and props. All compiled at build time — zero JavaScript runtime required.</p>
+          <div class="flex justify-center gap-4 mb-12"><a class="px-8 py-3 rounded-lg font-semibold transition-colors bg-blue-600 text-white hover_bg-blue-700 shadow-lg" href="https://github.com/megurock/pug-tail" target="_blank">View on GitHub</a><a class="px-8 py-3 rounded-lg font-semibold transition-colors bg-white text-blue-600 border-2 border-blue-600 hover_bg-blue-50" href="https://www.npmjs.com/package/pug-tail" target="_blank">Install from npm</a>
+          </div>
+        </section>
+        <section class="container mx-auto px-6 py-12">
+          <h2 class="text-4xl font-bold text-center text-gray-900 mb-12">📚 Learn More</h2>
+          <div class="grid grid-cols-1 md_grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <a class="block rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border bg-white border-gray-200 hover_shadow-xl hover_scale-105 cursor-pointer" href="about.html">
+              <div class="text-4xl mb-4">🎯</div>
+              <h3 class="text-xl font-bold mb-2 text-gray-900">Slots &amp; Props</h3>
+              <p class="text-gray-600 leading-relaxed">Learn how to use named slots and props for flexible components</p>
+            </a>
+            <a class="block rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border bg-white border-gray-200 hover_shadow-xl hover_scale-105 cursor-pointer" href="cli-guide.html">
+              <div class="text-4xl mb-4">📘</div>
+              <h3 class="text-xl font-bold mb-2 text-gray-900">CLI Guide</h3>
+              <p class="text-gray-600 leading-relaxed">Complete guide to CLI options, configuration, and best practices</p>
+            </a>
+          </div>
+        </section>
+        <section class="container mx-auto px-6 py-20">
+          <h2 class="text-4xl font-bold text-center text-gray-900 mb-4">✨ Features</h2>
+          <p class="text-center text-gray-600 mb-12 text-lg">Core capabilities that make PugTail powerful</p>
+          <div class="grid grid-cols-1 md_grid-cols-2 lg_grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div class="flex items-start space-x-4 p-6 bg-white rounded-lg shadow-sm border border-gray-100 hover_border-blue-200 transition-all">
+              <div class="text-3xl flex-shrink-0">🎯</div>
+              <div>
+                <h4 class="font-semibold text-gray-900 mb-1">Named Slots</h4>
+                <p class="text-sm text-gray-600">Define components with multiple named slots, just like Vue or Svelte</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4 p-6 bg-white rounded-lg shadow-sm border border-gray-100 hover_border-blue-200 transition-all">
+              <div class="text-3xl flex-shrink-0">📦</div>
+              <div>
+                <h4 class="font-semibold text-gray-900 mb-1">Props &amp; Attrs</h4>
+                <p class="text-sm text-gray-600">Clear separation with automatic attribute fallthrough to root elements</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4 p-6 bg-white rounded-lg shadow-sm border border-gray-100 hover_border-blue-200 transition-all">
+              <div class="text-3xl flex-shrink-0">⚡</div>
+              <div>
+                <h4 class="font-semibold text-gray-900 mb-1">Zero Runtime</h4>
+                <p class="text-sm text-gray-600">All components expanded at build time. No JavaScript needed in browser</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4 p-6 bg-white rounded-lg shadow-sm border border-gray-100 hover_border-blue-200 transition-all">
+              <div class="text-3xl flex-shrink-0">🔒</div>
+              <div>
+                <h4 class="font-semibold text-gray-900 mb-1">Type-Safe</h4>
+                <p class="text-sm text-gray-600">Built with TypeScript for excellent developer experience and safety</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4 p-6 bg-white rounded-lg shadow-sm border border-gray-100 hover_border-blue-200 transition-all">
+              <div class="text-3xl flex-shrink-0">🔄</div>
+              <div>
+                <h4 class="font-semibold text-gray-900 mb-1">Control Structures</h4>
+                <p class="text-sm text-gray-600">Components work seamlessly in loops, conditionals, and case statements</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4 p-6 bg-white rounded-lg shadow-sm border border-gray-100 hover_border-blue-200 transition-all">
+              <div class="text-3xl flex-shrink-0">🧩</div>
+              <div>
+                <h4 class="font-semibold text-gray-900 mb-1">Composable</h4>
+                <p class="text-sm text-gray-600">Nest components freely to build complex UIs from simple building blocks</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="container mx-auto px-6 py-20 bg-white rounded-2xl shadow-xl max-w-4xl my-12">
+          <h2 class="text-4xl font-bold text-center text-gray-900 mb-8">🚀 Quick Start</h2>
+          <div class="space-y-6">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-3">1. Install</h3>
+              <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto"><code>npm install pug-tail</code></pre>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-3">2. Define a Component</h3>
+              <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto"><code>component Card()
+  - const { title } = $props
+  .card
+    h3= title
+    slot(content)</code></pre>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-3">3. Use It</h3>
+              <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto"><code>each item in items
+  Card(title=item)
+    slot(content)
+      p Item description</code></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <footer class="bg-gray-50 border-t border-gray-200 mt-12">
+      <div class="container mx-auto px-6 py-8">
+        <div class="text-center">
+          <p class="text-gray-600 mb-4">Made with ❤️ by<a class="text-blue-600 hover_text-blue-800 font-semibold" href="https://github.com/megurock" target="_blank">megurock</a></p>
+          <div class="flex justify-center gap-6 text-sm"><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://github.com/megurock/pug-tail" target="_blank">GitHub</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://www.npmjs.com/package/pug-tail" target="_blank">npm</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://github.com/megurock/pug-tail/blob/main/LICENSE" target="_blank">MIT License</a>
+          </div>
+          <p class="text-gray-500 text-sm mt-4">© 2026 PugTail. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

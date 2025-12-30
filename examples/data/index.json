@@ -1,0 +1,113 @@
+{
+  "pageTitle": "PugTail - Component System for Pug",
+  "pageDescription": "Build-time component system for Pug templates with slots, props, and zero runtime overhead",
+  "hero": {
+    "badge": "⚡ Zero Runtime • Build-time Components",
+    "title": "PugTail",
+    "subtitle": "Component System for Pug",
+    "description": "Build maintainable templates with reusable components, slots, and props. All compiled at build time — zero JavaScript runtime required.",
+    "buttons": [
+      {
+        "text": "View on GitHub",
+        "href": "https://github.com/megurock/pug-tail",
+        "variant": "primary"
+      },
+      {
+        "text": "Install from npm",
+        "href": "https://www.npmjs.com/package/pug-tail",
+        "variant": "secondary"
+      }
+    ]
+  },
+  "demos": {
+    "title": "📚 Learn More",
+    "items": [
+      {
+        "icon": "🎯",
+        "title": "Slots & Props",
+        "description": "Learn how to use named slots and props for flexible components",
+        "href": "about.html"
+      },
+      {
+        "icon": "📘",
+        "title": "CLI Guide",
+        "description": "Complete guide to CLI options, configuration, and best practices",
+        "href": "cli-guide.html"
+      }
+    ]
+  },
+  "features": {
+    "title": "✨ Features",
+    "subtitle": "Core capabilities that make PugTail powerful",
+    "items": [
+      {
+        "icon": "🎯",
+        "title": "Named Slots",
+        "description": "Define components with multiple named slots, just like Vue or Svelte"
+      },
+      {
+        "icon": "📦",
+        "title": "Props & Attrs",
+        "description": "Clear separation with automatic attribute fallthrough to root elements"
+      },
+      {
+        "icon": "⚡",
+        "title": "Zero Runtime",
+        "description": "All components expanded at build time. No JavaScript needed in browser"
+      },
+      {
+        "icon": "🔒",
+        "title": "Type-Safe",
+        "description": "Built with TypeScript for excellent developer experience and safety"
+      },
+      {
+        "icon": "🔄",
+        "title": "Control Structures",
+        "description": "Components work seamlessly in loops, conditionals, and case statements"
+      },
+      {
+        "icon": "🧩",
+        "title": "Composable",
+        "description": "Nest components freely to build complex UIs from simple building blocks"
+      }
+    ]
+  },
+  "quickstart": {
+    "title": "🚀 Quick Start",
+    "steps": [
+      {
+        "title": "1. Install",
+        "code": "npm install pug-tail"
+      },
+      {
+        "title": "2. Define a Component",
+        "code": "component Card()\n  - const { title } = $props\n  .card\n    h3= title\n    slot(content)"
+      },
+      {
+        "title": "3. Use It",
+        "code": "each item in items\n  Card(title=item)\n    slot(content)\n      p Item description"
+      }
+    ]
+  },
+  "footer": {
+    "text": "Made with ❤️ by",
+    "author": {
+      "name": "megurock",
+      "href": "https://github.com/megurock"
+    },
+    "links": [
+      {
+        "text": "GitHub",
+        "href": "https://github.com/megurock/pug-tail"
+      },
+      {
+        "text": "npm",
+        "href": "https://www.npmjs.com/package/pug-tail"
+      },
+      {
+        "text": "MIT License",
+        "href": "https://github.com/megurock/pug-tail/blob/main/LICENSE"
+      }
+    ]
+  }
+}

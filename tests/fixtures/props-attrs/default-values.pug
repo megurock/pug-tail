@@ -1,0 +1,9 @@
+component Card()
+  - const { title, count = 0 } = $props
+  - const { class: className = "card" } = $attrs
+
+  .wrapper(class=className)
+    h2= title
+    p Count: #{count}
+
+Card(title="World")

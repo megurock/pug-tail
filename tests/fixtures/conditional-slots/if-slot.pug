@@ -1,0 +1,14 @@
+component Card()
+  - const { hasFooter = false } = $props
+  .card
+    slot(content)
+      p Default content
+    if hasFooter
+      .footer
+        slot(footer)
+
+Card(hasFooter=true)
+  slot(content)
+    p Main content
+  slot(footer)
+    p Footer content

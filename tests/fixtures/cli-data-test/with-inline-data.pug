@@ -1,0 +1,20 @@
+- const title = "Frontmatter Test"
+- const description = "Testing frontmatter parsing"
+- const author = "Test Author"
+- const year = 2025
+- const tags = ["test", "frontmatter"]
+
+doctype html
+html
+  head
+    title= title
+    meta(name="description" content=description)
+    meta(name="author" content=author)
+  body
+    h1= title
+    p Description: #{description}
+    p Author: #{author}
+    p Year: #{year}
+    ul
+      each tag in tags
+        li= tag

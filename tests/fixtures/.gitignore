@@ -1,0 +1,6 @@
+# Generated temporary output files (not fixture files)
+output.html
+output.json
+output.js
+*.tmp.html
+*.tmp.json

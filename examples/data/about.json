@@ -1,0 +1,109 @@
+{
+  "pageTitle": "Slots & Props - PugTail",
+  "pageDescription": "Learn how to use named slots and props in PugTail components",
+  "header": {
+    "title": "🎯 Slots & Props",
+    "subtitle": "Learn how to use named slots and props in PugTail components",
+    "backLink": {
+      "text": "← Back to Home",
+      "href": "index.html"
+    }
+  },
+  "sections": [
+    {
+      "id": "props",
+      "title": "📦 Props",
+      "description": "Props are passed as attributes and accessed via",
+      "codeBlocks": [
+        {
+          "title": "Component Definition:",
+          "code": "component Card()\n  - const { title, variant } = $props\n  div(class=`card-${variant}`)\n    h3= title"
+        },
+        {
+          "title": "Usage:",
+          "code": "Card(title=\"Hello\" variant=\"primary\")"
+        }
+      ],
+      "examples": [
+        {
+          "title": "Primary Card",
+          "variant": "primary",
+          "content": "This card uses the 'primary' variant prop"
+        },
+        {
+          "title": "Success Card",
+          "variant": "success",
+          "content": "This card uses the 'success' variant prop"
+        }
+      ]
+    },
+    {
+      "id": "slots",
+      "title": "🎰 Named Slots",
+      "description": "Components can have multiple named slots for flexible content insertion",
+      "codeBlocks": [
+        {
+          "title": "Component with slots:",
+          "code": "component Card()\n  .card\n    slot(content)\n    if hasFooter\n      .footer\n        slot(footer)"
+        },
+        {
+          "title": "Usage with slot content:",
+          "code": "Card(hasFooter=true)\n  slot(content)\n    p Main content\n  slot(footer)\n    button Click me"
+        }
+      ],
+      "example": {
+        "title": "Card with Footer",
+        "variant": "default",
+        "hasFooter": true,
+        "content": "This card has content in the main slot...",
+        "footer": "Learn More →"
+      }
+    },
+    {
+      "id": "default",
+      "title": "💡 Default Slot Content",
+      "description": "Slots can have default content that appears when no content is provided",
+      "example": {
+        "title": "Default Content Example",
+        "variant": "default"
+      }
+    },
+    {
+      "id": "conditional",
+      "title": "🔍 Conditional Slots (if/else)",
+      "description": "Slots can be placed inside control structures like if/else statements",
+      "codeBlocks": [
+        {
+          "title": "Component with conditional slot:",
+          "code": "component Card()\n  - const { hasFooter = false } = $props\n  .card\n    slot(content)\n    if hasFooter\n      .footer\n        slot(footer)"
+        }
+      ],
+      "examples": [
+        {
+          "label": "Without footer (hasFooter=false):",
+          "title": "No Footer",
+          "variant": "default",
+          "hasFooter": false,
+          "content": "This card has no footer (hasFooter defaults to false)"
+        },
+        {
+          "label": "With footer (hasFooter=true):",
+          "title": "With Footer",
+          "variant": "success",
+          "hasFooter": true,
+          "content": "This card has a footer controlled by the hasFooter prop!",
+          "footerButtons": [
+            {
+              "text": "Cancel",
+              "variant": "ghost"
+            },
+            {
+              "text": "Confirm",
+              "variant": "solid"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+component Card()
+  - const { title } = $props
+  .card
+    h2= title
+
+component Button()
+  - const { label } = $props
+  button= label
+
+Card(title="Card Title")
+Button(label="Click Me")

@@ -1,0 +1,7 @@
+component List()
+  - const { items } = attributes
+  ul
+    each item in items
+      li= item
+
+List(items=["Apple", "Banana", "Cherry"])

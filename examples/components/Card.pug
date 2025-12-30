@@ -1,0 +1,33 @@
+component Card()
+  - const { title, subtitle, description, icon, variant = 'default', href, hasFooter = false } = $props
+  
+  //- Color classes based on variant
+  - const bgClass = variant === 'primary' ? 'bg-blue-50' : variant === 'success' ? 'bg-green-50' : variant === 'warning' ? 'bg-yellow-50' : 'bg-white'
+  - const borderClass = variant === 'primary' ? 'border-blue-200' : variant === 'success' ? 'border-green-200' : variant === 'warning' ? 'border-yellow-200' : 'border-gray-200'
+  - const textClass = variant === 'primary' ? 'text-blue-900' : variant === 'success' ? 'text-green-900' : variant === 'warning' ? 'text-yellow-900' : 'text-gray-900'
+  - const subtextClass = variant === 'primary' ? 'text-blue-600' : variant === 'success' ? 'text-green-600' : variant === 'warning' ? 'text-yellow-600' : 'text-gray-600'
+  - const borderTopClass = variant === 'primary' ? 'border-blue-300' : variant === 'success' ? 'border-green-300' : variant === 'warning' ? 'border-yellow-300' : 'border-gray-200'
+  - const wrapperClass = `rounded-lg shadow-md p-6 mb-4 transition-all duration-200 border ${bgClass} ${borderClass}`
+  - const hoverClass = href ? 'hover_shadow-xl hover_scale-105 cursor-pointer' : 'hover_shadow-lg'
+  
+  //- Use dynamic tag based on href
+  - const tagName = href ? 'a' : 'div'
+  
+  #{tagName}.block(
+    href=href
+    class=`${wrapperClass} ${hoverClass}`
+  )
+    if icon
+      .text-4xl.mb-4= icon
+    if title
+      h3.text-xl.font-bold.mb-2(class=textClass)= title
+    if subtitle
+      p.text-sm.mb-2(class=subtextClass)= subtitle
+    if description
+      p.text-gray-600.leading-relaxed= description
+    
+    slot(content)
+    
+    if hasFooter
+      .mt-4.pt-4.border-t(class=borderTopClass)
+        slot(footer)
