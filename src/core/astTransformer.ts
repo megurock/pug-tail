@@ -1,0 +1,388 @@
+/**
+ * ASTTransformer
+ *
+ * A class that transforms the Pug AST to expand component definitions and slots.
+ */
+
+import walk from 'pug-walk'
+import type { NodeLocation, SlotDefinition } from '@/types'
+import type { Block, Node, Tag } from '@/types/pug'
+import { getNodeLocationObject, isCapitalizedTag } from '@/utils/astHelpers'
+import {
+  extractComponentDefinition,
+  extractSlotName,
+  isComponentDefinitionNode,
+  isSlotDefinitionNode,
+} from '@/utils/componentDetector'
+import { deepCloneBlock } from '@/utils/deepClone'
+import type { ComponentRegistry } from './componentRegistry'
+import { ErrorHandler, type ErrorHandlerOptions } from './errorHandler'
+import type { SlotResolver } from './slotResolver'
+
+/**
+ * A class that transforms the AST to expand components and slots.
+ *
+ * Processing flow:
+ * 1. Detect and register component definitions.
+ * 2. Expand component calls.
+ * 3. Remove component definition nodes.
+ *
+ * @example
+ * ```typescript
+ * const registry = new ComponentRegistry()
+ * const resolver = new SlotResolver()
+ * const transformer = new ASTTransformer(registry, resolver)
+ *
+ * const transformedAst = transformer.transform(ast)
+ * ```
+ */
+export class ASTTransformer {
+  private registry: ComponentRegistry
+  private resolver: SlotResolver
+  private errorHandler: ErrorHandler
+  private callStack: string[] = [] // For recursion detection
+
+  constructor(
+    registry: ComponentRegistry,
+    resolver: SlotResolver,
+    options: ErrorHandlerOptions = {},
+  ) {
+    this.registry = registry
+    this.resolver = resolver
+    this.errorHandler = new ErrorHandler(options)
+  }
+
+  /**
+   * Transforms the AST.
+   *
+   * @param ast - The AST to transform.
+   * @returns The transformed AST (a pure Pug AST with components and slots expanded).
+   *
+   * @example
+   * ```typescript
+   * const transformed = transformer.transform(ast)
+   * ```
+   */
+  transform(ast: Node): Node {
+    // 1. Detect and register component definitions.
+    this.detectAndRegisterComponents(ast)
+
+    // 2. Expand component calls.
+    const transformed = this.expandComponents(ast)
+
+    // 3. Remove component definition nodes.
+    return this.removeComponentDefinitions(transformed)
+  }
+
+  /**
+   * Detects and registers component definitions.
+   *
+   * Detects all component definitions within the AST and
+   * registers them with the ComponentRegistry.
+   *
+   * @param ast - The AST to search.
+   */
+  private detectAndRegisterComponents(ast: Node): void {
+    walk(ast, (node: Node) => {
+      if (isComponentDefinitionNode(node)) {
+        const definition = extractComponentDefinition(node, this.errorHandler)
+        this.registry.register(definition)
+      }
+    })
+  }
+
+  /**
+   * Expands component calls.
+   *
+   * Detects all component calls within the AST and
+   * replaces them with the corresponding component definitions.
+   *
+   * @param ast - The AST to transform.
+   * @returns The transformed AST.
+   */
+  private expandComponents(ast: Node): Node {
+    if (ast.type === 'Block') {
+      return this.expandComponentsInBlock(ast)
+    }
+
+    if (ast.type === 'Tag' && ast.block) {
+      const expandedBlock = this.expandComponentsInBlock(ast.block)
+      return {
+        ...ast,
+        block: expandedBlock,
+      }
+    }
+
+    return ast
+  }
+
+  /**
+   * Expands component calls within a Block.
+   *
+   * @param block - The Block to transform.
+   * @returns The transformed Block.
+   */
+  private expandComponentsInBlock(block: Block): Block {
+    const result: Block = {
+      type: 'Block',
+      nodes: [],
+      line: block.line,
+      column: block.column,
+      filename: block.filename,
+    }
+
+    for (const node of block.nodes) {
+      if (this.isComponentCall(node)) {
+        // Expand the component call and add its nodes.
+        const expanded = this.expandComponentCall(node)
+        // Recursively expand component calls within the expanded Block.
+        const fullyExpanded = this.expandComponentsInBlock(expanded)
+        result.nodes.push(...fullyExpanded.nodes)
+      } else {
+        // If it's not a component call, process it recursively.
+        const processed = this.expandComponents(node)
+        result.nodes.push(processed)
+      }
+    }
+
+    return result
+  }
+
+  /**
+   * Expands an individual component call.
+   *
+   * @param callNode - The component call node.
+   * @returns The expanded AST (Block).
+   * @throws {ExtendedPugTailError} If the component is not found, or if a recursive call is detected.
+   */
+  private expandComponentCall(callNode: Node): Block {
+    if (callNode.type !== 'Tag') {
+      const location = getNodeLocationObject(callNode)
+      throw this.errorHandler.unexpectedNodeType('Tag', callNode.type, location)
+    }
+
+    const componentName = this.extractCallName(callNode as Tag)
+    const location = getNodeLocationObject(callNode)
+
+    // Recursion check
+    if (this.callStack.includes(componentName)) {
+      throw this.errorHandler.recursiveComponentCall(
+        componentName,
+        this.callStack,
+        location,
+      )
+    }
+
+    this.callStack.push(componentName)
+
+    try {
+      // Get the component definition.
+      const component = this.registry.get(componentName)
+      if (!component) {
+        const available = this.registry.getNames()
+        throw this.errorHandler.componentNotFound(
+          componentName,
+          location,
+          available,
+        )
+      }
+
+      // Extract slots from the call site.
+      const providedSlots = this.resolver.extractProvidedSlots(callNode)
+
+      // Copy the component and replace slots.
+      const componentBodyCopy = deepCloneBlock(component.body)
+      const result = this.replaceSlots(
+        componentBodyCopy,
+        providedSlots,
+        component.slots,
+        location,
+      )
+
+      return result
+    } finally {
+      this.callStack.pop()
+    }
+  }
+
+  /**
+   * Replaces slots.
+   *
+   * Replaces slot nodes within a component definition with the provided
+   * slot content or default content.
+   *
+   * @param componentBody - The Block of the component body.
+   * @param providedSlots - A Map of provided slots.
+   * @param slotDefinitions - A Map of slot definitions within the component.
+   * @param callLocation - The location of the component call (for error reporting).
+   * @returns A Block with slots replaced.
+   * @throws {ExtendedPugTailError} If a provided slot does not exist in the definition.
+   */
+  private replaceSlots(
+    componentBody: Block,
+    providedSlots: Map<string, Block>,
+    slotDefinitions: Map<string, SlotDefinition>,
+    callLocation: NodeLocation,
+  ): Block {
+    // Check if the provided slots exist in the definition.
+    // Note: 'default' slot can be provided even if not explicitly defined
+    // (when component has unnamed slot or when direct children are provided)
+    for (const [slotName] of providedSlots) {
+      if (!slotDefinitions.has(slotName)) {
+        // Allow 'default' slot to be provided even if not explicitly defined
+        // This supports unnamed slots and direct child content
+        if (slotName === 'default') {
+          continue
+        }
+        const availableSlots = Array.from(slotDefinitions.keys())
+        throw this.errorHandler.slotNotDefined(
+          slotName,
+          callLocation,
+          availableSlots,
+        )
+      }
+    }
+
+    const result = deepCloneBlock(componentBody)
+    const transformer = this // Capture 'this'
+
+    // Traverse and replace all slot nodes within the Block.
+    function traverse(block: Block): void {
+      for (let i = 0; i < block.nodes.length; i++) {
+        const node = block.nodes[i]
+        if (!node) continue
+
+        if (isSlotDefinitionNode(node)) {
+          const slotName = extractSlotName(node)
+
+          // Use the provided slot or the default.
+          let replacement: Block
+
+          if (providedSlots.has(slotName)) {
+            const provided = providedSlots.get(slotName)
+            if (provided) {
+              replacement = provided
+            } else {
+              // Fallback: use the default slot.
+              replacement = transformer.getDefaultSlotBlock(
+                slotName,
+                slotDefinitions,
+                node,
+              )
+            }
+          } else {
+            // Use the default slot.
+            replacement = transformer.getDefaultSlotBlock(
+              slotName,
+              slotDefinitions,
+              node,
+            )
+          }
+
+          // Replace the slot node.
+          block.nodes[i] = replacement
+        }
+
+        // Recursively traverse child nodes.
+        if (node.type === 'Tag' && node.block) {
+          traverse(node.block)
+        } else if (node.type === 'Block') {
+          traverse(node)
+        }
+      }
+    }
+
+    traverse(result)
+    return result
+  }
+
+  /**
+   * Gets the Block for the default slot.
+   *
+   * @param slotName - The name of the slot.
+   * @param slotDefinitions - A Map of slot definitions.
+   * @param slotNode - The slot node (for fallback location).
+   * @returns The Block for the default slot.
+   */
+  private getDefaultSlotBlock(
+    slotName: string,
+    slotDefinitions: Map<string, SlotDefinition>,
+    slotNode: Tag,
+  ): Block {
+    const slotDef = slotDefinitions.get(slotName)
+    if (slotDef?.placeholder?.block) {
+      return deepCloneBlock(slotDef.placeholder.block)
+    }
+
+    // If the slot definition is not found, return an empty Block.
+    return {
+      type: 'Block',
+      nodes: [],
+      line: slotNode.line,
+      column: slotNode.column,
+      filename: slotNode.filename,
+    }
+  }
+
+  /**
+   * Determines if a node is a component call node.
+   *
+   * @param node - The node to check.
+   * @returns True if the node is a component call.
+   */
+  private isComponentCall(node: Node): boolean {
+    return isCapitalizedTag(node)
+  }
+
+  /**
+   * Extracts the component name from a component call node.
+   *
+   * @param callNode - The component call node.
+   * @returns The component name (e.g., 'Card').
+   */
+  private extractCallName(callNode: Tag): string {
+    return callNode.name
+  }
+
+  /**
+   * Removes component definition nodes.
+   *
+   * Removes component definition nodes from the transformed AST.
+   *
+   * @param ast - The AST to transform.
+   * @returns An AST with component definition nodes removed.
+   */
+  private removeComponentDefinitions(ast: Node): Node {
+    if (ast.type === 'Block') {
+      const result: Block = {
+        type: 'Block',
+        nodes: [],
+        line: ast.line,
+        column: ast.column,
+        filename: ast.filename,
+      }
+
+      for (const node of ast.nodes) {
+        if (!isComponentDefinitionNode(node)) {
+          // If it's not a component definition, process it recursively.
+          const processed = this.removeComponentDefinitions(node)
+          result.nodes.push(processed)
+        }
+        // Skip if it is a component definition.
+      }
+
+      return result
+    }
+
+    if (ast.type === 'Tag' && ast.block) {
+      const processedBlock = this.removeComponentDefinitions(ast.block) as Block
+      return {
+        ...ast,
+        block: processedBlock,
+      }
+    }
+
+    // Return other nodes as is.
+    return ast
+  }
+}

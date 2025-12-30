@@ -1,0 +1,13 @@
+component Card()
+  .card
+    slot(header)
+      p Default Header
+    slot(body)
+      p Default Body
+
+Card()
+  slot(header)
+    h1 Title
+  slot(body)
+    p Content
+

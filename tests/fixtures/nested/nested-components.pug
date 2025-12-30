@@ -1,0 +1,16 @@
+component Container()
+  .container
+    slot(content)
+      p Default content
+
+component Card()
+  .card
+    slot(body)
+      p Default body
+
+Container()
+  slot(content)
+    Card()
+      slot(body)
+        p Nested content
+

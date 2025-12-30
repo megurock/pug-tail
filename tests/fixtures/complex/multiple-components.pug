@@ -1,0 +1,43 @@
+component Layout()
+  .layout
+    header
+      slot(header)
+    main
+      slot(main)
+    aside
+      slot(sidebar)
+    footer
+      slot(footer)
+
+component Card()
+  .card
+    slot(title)
+      h2 Default Title
+    slot(body)
+      p Default Body
+
+component Button()
+  button.button
+    slot(label)
+      span Click me
+
+Layout()
+  slot(header)
+    h1 Site Title
+  slot(main)
+    Card()
+      slot(title)
+        h2 Article Title
+      slot(body)
+        p Article content
+        Button()
+          slot(label)
+            span Submit
+  slot(sidebar)
+    nav
+      ul
+        li Link 1
+        li Link 2
+  slot(footer)
+    p Copyright 2024
+
