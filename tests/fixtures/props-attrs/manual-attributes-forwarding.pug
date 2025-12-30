@@ -1,0 +1,9 @@
+component Input()
+  - const { label } = $props
+  - const { placeholder, ...restAttrs } = $attrs
+
+  .wrapper
+    label= label
+    input.field(placeholder=placeholder)&attributes(restAttrs)
+
+Input(label="Name", placeholder="Enter", type="text", class="input")

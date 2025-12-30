@@ -1,0 +1,35 @@
+//- Header Component
+//- 
+//- This component demonstrates accessing global data directly from components.
+//- 
+//- How it works:
+//- 1. pugtail.config.js sets: dataKey: 'global'
+//- 2. pugtail.config.js sets: allowedGlobals: ['global']
+//- 3. data/global.json contains: { siteName, siteUrl, navigation, ... }
+//- 4. Components can access: global.siteName, global.navigation, etc.
+//- 
+//- ⚠️ Important Note:
+//- This pattern is convenient but creates implicit dependencies.
+//- Components become tightly coupled to the global data structure.
+//- 
+//- Best Practice:
+//- Prefer passing data via props for better component reusability:
+//-   component Header()
+//-     - const { siteName, siteUrl, navigation } = $props
+//-   Header(siteName=global.siteName siteUrl=global.siteUrl navigation=global.navigation)
+//- 
+//- Use global data access only for truly global, stable values like:
+//- - Site name and branding
+//- - Main navigation structure
+//- - Footer information
+
+component Header()
+  //- Access global data via 'global' key
+  header.bg-white.shadow-sm
+    .container.mx-auto.px-6.py-4
+      nav.flex.items-center.justify-between
+        .flex.items-center.space-x-8
+          a.text-xl.font-bold.text-blue-600(href=global.siteUrl)= global.siteName
+          .flex.space-x-6
+            each item in global.navigation
+              a.text-gray-600.hover_text-blue-600.transition-colors(href=item.url)= item.label

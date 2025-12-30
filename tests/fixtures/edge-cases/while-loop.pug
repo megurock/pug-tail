@@ -1,0 +1,8 @@
+component Counter()
+  - const { max } = attributes
+  - let n = 0
+  ul
+    while n < max
+      li= n++
+
+Counter(max=3)

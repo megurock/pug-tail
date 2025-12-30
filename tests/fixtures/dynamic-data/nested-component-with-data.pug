@@ -1,0 +1,11 @@
+component Inner()
+  - const { val } = $props
+  p= val
+
+component Outer()
+  - const { data } = $props
+  div
+    Inner(val=data)
+
+Outer(data=myData)
+

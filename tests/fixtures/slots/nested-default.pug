@@ -1,0 +1,14 @@
+component Card()
+  .card
+    slot(header)
+      .default-header
+        h2 Default Header Title
+        p Default subtitle
+    slot(body)
+      p Default body content
+
+Card()
+  slot(header)
+    h1 Custom Header
+  // body uses default content
+

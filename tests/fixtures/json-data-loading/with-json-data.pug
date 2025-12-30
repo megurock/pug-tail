@@ -1,0 +1,14 @@
+component Feature()
+  - const { icon, title, description } = $props
+  .feature
+    .icon= icon
+    h3= title
+    p= description
+
+//- データはtransformのdataオプションから渡される
+each feature in features
+  Feature(
+    icon=feature.icon
+    title=feature.title
+    description=feature.description
+  )

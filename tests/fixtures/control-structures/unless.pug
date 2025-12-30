@@ -1,0 +1,9 @@
+component Card()
+  - const { title } = $props
+  .card
+    h3= title
+
+- const condition = false
+
+unless condition
+  Card(title="Unless Block")

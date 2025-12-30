@@ -1,0 +1,20 @@
+component Card()
+  .card
+    .card-header
+      slot(header)
+        p Default Header
+    .card-body
+      slot(body)
+        p Default Body
+    .card-footer
+      slot(footer)
+        p Default Footer
+
+Card()
+  slot(header)
+    h1 Title
+  slot(body)
+    p Content
+  slot(footer)
+    button OK
+

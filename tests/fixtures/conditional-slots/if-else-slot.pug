@@ -1,0 +1,30 @@
+component Alert()
+  - const { type = 'info' } = $props
+  .alert
+    if type === 'error'
+      .alert-error
+        .icon ❌
+        slot(message)
+          p Default error message
+    else if type === 'success'
+      .alert-success
+        .icon ✅
+        slot(message)
+          p Default success message
+    else
+      .alert-info
+        .icon ℹ️
+        slot(message)
+          p Default info message
+
+Alert(type='error')
+  slot(message)
+    p Something went wrong!
+
+Alert(type='success')
+  slot(message)
+    p Operation completed successfully!
+
+Alert(type='info')
+  slot(message)
+    p This is an informational message.

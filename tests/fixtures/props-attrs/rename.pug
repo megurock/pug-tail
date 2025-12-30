@@ -1,0 +1,7 @@
+component Button()
+  - const { label } = $props
+  - const { class: btnClass = "btn" } = $attrs
+
+  button(class=btnClass)= label
+
+Button(label="Click", class="primary")

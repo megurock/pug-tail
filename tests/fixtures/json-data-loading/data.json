@@ -1,0 +1,14 @@
+{
+  "features": [
+    {
+      "icon": "🎯",
+      "title": "Feature One",
+      "description": "First feature description"
+    },
+    {
+      "icon": "📦",
+      "title": "Feature Two",
+      "description": "Second feature description"
+    }
+  ]
+}

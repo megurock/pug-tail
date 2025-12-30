@@ -1,0 +1,16 @@
+component Card()
+  - const { title } = $props
+  .card
+    h3= title
+
+- const value = 'two'
+
+case value
+  when 'one'
+    Card(title="Case One")
+  when 'two'
+    Card(title="Case Two")
+  when 'three'
+    Card(title="Case Three")
+  default
+    Card(title="Case Default")

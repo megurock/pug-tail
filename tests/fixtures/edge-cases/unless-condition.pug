@@ -1,0 +1,9 @@
+component Alert()
+  - const { isDismissed } = attributes
+  unless isDismissed
+    .alert
+      slot
+        | Default alert message
+
+Alert(isDismissed=false)
+  | This should be visible

@@ -1,0 +1,21 @@
+component Header()
+  - const { nav } = $props
+  header
+    nav
+      each item in nav
+        a(href=item.url)= item.label
+
+component Layout()
+  - const { navigation } = $props
+  html
+    head
+      title Test
+    body
+      slot(header)
+        Header(nav=navigation)
+      slot(main)
+
+Layout(navigation=navigation)
+  slot(main)
+    p Main content
+

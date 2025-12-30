@@ -1,0 +1,115 @@
+//- CLI Guide Page
+//- 
+//- Data loading strategy:
+//- 1. Global data (global.json): Loaded via config, accessed as global.*
+//- 2. Page data (cli-guide.json): Loaded via $dataFiles, accessed directly
+//- 
+//- See index.pug for detailed explanation of data loading.
+
+//- Load page-specific data files
+- const $dataFiles = ['/data/cli-guide.json']
+
+include ../components/Layout.pug
+include ../components/CodeBlock.pug
+
+Layout(
+  title=pageTitle
+  description=pageDescription
+)
+  slot(main)
+    .bg-gradient-to-br.from-indigo-50.to-blue-50.min-h-screen.py-12.px-4
+      
+      .max-w-4xl.mx-auto
+        
+        //- Header
+        header.text-center.mb-12
+          a.inline-block.text-blue-600.hover_text-blue-800.mb-4(
+            href=header.backLink.href
+          )= header.backLink.text
+          h1.text-5xl.font-bold.text-gray-900.mb-4= header.title
+          p.text-xl.text-gray-600.mb-2= header.subtitle
+          p.text-sm.text-gray-500= header.description
+        
+        //- Sections
+        each section in sections
+          section.mb-12
+            .bg-white.rounded-xl.shadow-lg.p-8
+              h2.text-3xl.font-bold.text-gray-900.mb-2.flex.items-center
+                span.text-4xl.mr-3= section.icon
+                = section.title
+              
+              if section.description
+                p.text-gray-600.mb-6= section.description
+              
+              //- Different content types based on section
+              case section.id
+                when 'installation'
+                  each command in section.commands
+                    p.text-gray-700.mb-3.font-semibold= command.title
+                    CodeBlock
+                      slot(code)= command.code
+                
+                when 'basic-usage'
+                  each command in section.commands
+                    p.text-gray-700.mb-3.font-semibold= command.title
+                    CodeBlock
+                      slot(code)= command.code
+                
+                when 'cli-options'
+                  .space-y-4
+                    each option in section.options
+                      .border-l-4.border-blue-500.pl-4.py-2
+                        code.text-blue-600.font-semibold= option.flag
+                        p.text-gray-700.mt-1= option.description
+                
+                when 'config-file'
+                  p.text-gray-700.mb-3.font-semibold= section.example.title
+                  CodeBlock
+                    slot(code)= section.example.code
+                  
+                  .mt-6.bg-blue-50.border-l-4.border-blue-500.p-4.rounded
+                    p.font-semibold.text-blue-900.mb-2 📌 Notes:
+                    ul.list-disc.list-inside.space-y-1
+                      each note in section.notes
+                        li.text-gray-700= note
+                
+                when 'data-loading'
+                  each method in section.methods
+                    p.text-gray-700.mb-3.font-semibold= method.title
+                    CodeBlock
+                      slot(code)= method.code
+                    p.text-sm.text-gray-600.mb-4.italic= method.note
+                  
+                  .mt-6.bg-green-50.border-l-4.border-green-500.p-4.rounded
+                    p.font-semibold.text-green-900.mb-2 💡 Tips:
+                    ul.list-disc.list-inside.space-y-1
+                      each tip in section.tips
+                        li.text-gray-700= tip
+                
+                when 'watch-mode'
+                  each command in section.commands
+                    p.text-gray-700.mb-3.font-semibold= command.title
+                    CodeBlock
+                      slot(code)= command.code
+                  
+                  .mt-6
+                    p.font-semibold.text-gray-900.mb-3 Features:
+                    ul.list-disc.list-inside.space-y-2
+                      each feature in section.features
+                        li.text-gray-700= feature
+                
+                when 'examples'
+                  .space-y-6
+                    each useCase in section.useCases
+                      .border.border-gray-200.rounded-lg.p-4
+                        p.font-semibold.text-gray-900.mb-3= useCase.title
+                        ol.list-decimal.list-inside.space-y-2
+                          each step in useCase.steps
+                            li.text-gray-700= step
+                
+                when 'tips'
+                  .space-y-4
+                    each tip in section.tips
+                      .bg-gradient-to-r.from-yellow-50.to-orange-50.border-l-4.border-yellow-500.p-4.rounded
+                        p.font-semibold.text-gray-900.mb-2= tip.title
+                        p.text-gray-700= tip.content

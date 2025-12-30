@@ -1,0 +1,9 @@
+component Card()
+  - const { title, subtitle = "No subtitle", count = 0 } = $props
+
+  .card
+    h2= title
+    h3= subtitle
+    p Count: #{count}
+
+Card(title="Test", count=3)

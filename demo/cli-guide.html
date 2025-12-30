@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI Guide - PugTail</title>
+    <meta name="description" content="Complete guide to PugTail CLI options, configuration, and best practices">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      [class*="hover_"] { transition: all 0.2s; }
+      .hover_shadow-xl:hover { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+      .hover_shadow-lg:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+      .hover_scale-105:hover { transform: scale(1.05); }
+      .hover_border-blue-200:hover { border-color: rgb(191 219 254); }
+      .hover_bg-blue-700:hover { background-color: rgb(29 78 216); }
+      .hover_bg-blue-800:hover { background-color: rgb(30 64 175); }
+      .hover_bg-blue-50:hover { background-color: rgb(239 246 255); }
+      .hover_bg-opacity-30:hover { background-color: rgba(255, 255, 255, 0.3); }
+      .hover_bg-opacity-90:hover { background-color: rgba(255, 255, 255, 0.9); }
+      .hover_text-blue-600:hover { color: rgb(37 99 235); }
+      .hover_text-blue-800:hover { color: rgb(30 64 175); }
+    </style>
+  </head>
+  <body>
+    <header class="bg-white shadow-sm">
+      <div class="container mx-auto px-6 py-4">
+        <nav class="flex items-center justify-between">
+          <div class="flex items-center space-x-8"><a class="text-xl font-bold text-blue-600" href="https://github.com/megurock/pug-tail">PugTail</a>
+            <div class="flex space-x-6"><a class="text-gray-600 hover_text-blue-600 transition-colors" href="index.html">Home</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="about.html">Slots &amp; Props</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="cli-guide.html">CLI Guide</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <div class="bg-gradient-to-br from-indigo-50 to-blue-50 min-h-screen py-12 px-4">
+        <div class="max-w-4xl mx-auto">
+          <header class="text-center mb-12"><a class="inline-block text-blue-600 hover_text-blue-800 mb-4" href="index.html">← Back to Home</a>
+            <h1 class="text-5xl font-bold text-gray-900 mb-4">📘 CLI Guide</h1>
+            <p class="text-xl text-gray-600 mb-2">Learn how to use PugTail from the command line</p>
+            <p class="text-sm text-gray-500">Complete guide to PugTail CLI options, configuration, and best practices</p>
+          </header>
+          <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+              <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center"><span class="text-4xl mr-3">📦</span>Installation
+              </h2>
+              <p class="text-gray-600 mb-6">Install PugTail via npm or yarn</p>
+              <p class="text-gray-700 mb-3 font-semibold">Using npm:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">npm install pug-tail</code></pre>
+              </div>
+              <p class="text-gray-700 mb-3 font-semibold">Using yarn:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">yarn add pug-tail</code></pre>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+              <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center"><span class="text-4xl mr-3">🚀</span>Basic Usage
+              </h2>
+              <p class="text-gray-600 mb-6">Simple commands to get started</p>
+              <p class="text-gray-700 mb-3 font-semibold">Compile a single file:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">npx pug-tail src/index.pug -o dist/index.html</code></pre>
+              </div>
+              <p class="text-gray-700 mb-3 font-semibold">Compile a directory:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">npx pug-tail src -o dist</code></pre>
+              </div>
+              <p class="text-gray-700 mb-3 font-semibold">Using a config file:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">npx pug-tail -c pugtail.config.js</code></pre>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+              <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center"><span class="text-4xl mr-3">⚙️</span>CLI Options
+              </h2>
+              <p class="text-gray-600 mb-6">Main command-line options</p>
+              <div class="space-y-4">
+                <div class="border-l-4 border-blue-500 pl-4 py-2"><code class="text-blue-600 font-semibold">-o, --out &lt;dir&gt;</code>
+                  <p class="text-gray-700 mt-1">Output directory or file path</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4 py-2"><code class="text-blue-600 font-semibold">-w, --watch</code>
+                  <p class="text-gray-700 mt-1">Watch mode - recompile on file changes</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4 py-2"><code class="text-blue-600 font-semibold">-c, --config &lt;path&gt;</code>
+                  <p class="text-gray-700 mt-1">Path to config file (pugtail.config.js)</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4 py-2"><code class="text-blue-600 font-semibold">--obj &lt;path&gt;</code>
+                  <p class="text-gray-700 mt-1">Data file (JSON/YAML) to inject into templates</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4 py-2"><code class="text-blue-600 font-semibold">--pretty</code>
+                  <p class="text-gray-700 mt-1">Pretty-print the output HTML</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4 py-2"><code class="text-blue-600 font-semibold">--basedir &lt;path&gt;</code>
+                  <p class="text-gray-700 mt-1">Base directory for absolute includes</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4 py-2"><code class="text-blue-600 font-semibold">-d, --debug</code>
+                  <p class="text-gray-700 mt-1">Enable debug output for troubleshooting</p>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+              <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center"><span class="text-4xl mr-3">📝</span>Config File
+              </h2>
+              <p class="text-gray-600 mb-6">Using pugtail.config.js for project settings</p>
+              <p class="text-gray-700 mb-3 font-semibold">Example pugtail.config.js:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">export default {
+  files: {
+    input: 'src/**/*.pug',
+    output: 'dist',
+    root: 'src/pages'
+  },
+  basedir: '.',
+  pretty: true,
+  data: './data/global.json'
+}</code></pre>
+              </div>
+              <div class="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <p class="font-semibold text-blue-900 mb-2">📌 Notes:</p>
+                <ul class="list-disc list-inside space-y-1">
+                  <li class="text-gray-700">Config file paths are relative to the config file location</li>
+                  <li class="text-gray-700">CLI options override config file settings</li>
+                  <li class="text-gray-700">Supports both .js and .mjs extensions</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+              <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center"><span class="text-4xl mr-3">💾</span>Data Loading
+              </h2>
+              <p class="text-gray-600 mb-6">Two ways to load JSON data into your templates</p>
+              <p class="text-gray-700 mb-3 font-semibold">1. Global data via config:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">// pugtail.config.js
+export default {
+  data: './data/global.json'
+}</code></pre>
+              </div>
+              <p class="text-sm text-gray-600 mb-4 italic">Available in all templates</p>
+              <p class="text-gray-700 mb-3 font-semibold">2. Per-page data via $dataFiles:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">//- pages/index.pug
+- const $dataFiles = ['/data/page.json']
+
+h1= pageTitle</code></pre>
+              </div>
+              <p class="text-sm text-gray-600 mb-4 italic">Only available in entry files (not included components)</p>
+              <div class="mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <p class="font-semibold text-green-900 mb-2">💡 Tips:</p>
+                <ul class="list-disc list-inside space-y-1">
+                  <li class="text-gray-700">Combine both methods: global data for site-wide settings, $dataFiles for page-specific content</li>
+                  <li class="text-gray-700">Absolute paths in $dataFiles (starting with /) are resolved from basedir</li>
+                  <li class="text-gray-700">Relative paths are resolved from the entry file location</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+              <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center"><span class="text-4xl mr-3">👁️</span>Watch Mode
+              </h2>
+              <p class="text-gray-600 mb-6">Automatic recompilation during development</p>
+              <p class="text-gray-700 mb-3 font-semibold">Enable watch mode:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">npx pug-tail src -o dist -w</code></pre>
+              </div>
+              <p class="text-gray-700 mb-3 font-semibold">Watch with config:</p>
+              <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto mb-4">
+                <pre><code class="language-pug">npx pug-tail -c pugtail.config.js -w</code></pre>
+              </div>
+              <div class="mt-6">
+                <p class="font-semibold text-gray-900 mb-3">Features:</p>
+                <ul class="list-disc list-inside space-y-2">
+                  <li class="text-gray-700">Monitors file changes in real-time</li>
+                  <li class="text-gray-700">Automatically recompiles on save</li>
+                  <li class="text-gray-700">Debounced to prevent multiple rebuilds</li>
+                  <li class="text-gray-700">Press Ctrl+C to stop watching</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+              <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center"><span class="text-4xl mr-3">💡</span>Examples
+              </h2>
+              <p class="text-gray-600 mb-6">Common use cases and patterns</p>
+              <div class="space-y-6">
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <p class="font-semibold text-gray-900 mb-3">Static site with global navigation:</p>
+                  <ol class="list-decimal list-inside space-y-2">
+                    <li class="text-gray-700">Create data/global.json with navigation data</li>
+                    <li class="text-gray-700">Set data: './data/global.json' in config</li>
+                    <li class="text-gray-700">Use navigation variable in Layout component</li>
+                  </ol>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <p class="font-semibold text-gray-900 mb-3">Blog with per-post metadata:</p>
+                  <ol class="list-decimal list-inside space-y-2">
+                    <li class="text-gray-700">Create data/posts/post-1.json for each post</li>
+                    <li class="text-gray-700">Use $dataFiles in each post template</li>
+                    <li class="text-gray-700">Access post-specific data like title, date, author</li>
+                  </ol>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <p class="font-semibold text-gray-900 mb-3">Multi-language site:</p>
+                  <ol class="list-decimal list-inside space-y-2">
+                    <li class="text-gray-700">Create data/en.json and data/ja.json</li>
+                    <li class="text-gray-700">Use $dataFiles to load language-specific content</li>
+                    <li class="text-gray-700">Generate separate HTML files for each language</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+              <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center"><span class="text-4xl mr-3">✨</span>Tips &amp; Tricks
+              </h2>
+              <p class="text-gray-600 mb-6">Best practices for using PugTail</p>
+              <div class="space-y-4">
+                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-4 rounded">
+                  <p class="font-semibold text-gray-900 mb-2">Organize components:</p>
+                  <p class="text-gray-700">Keep components in a dedicated folder like components/ and use include to load them</p>
+                </div>
+                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-4 rounded">
+                  <p class="font-semibold text-gray-900 mb-2">Use glob patterns:</p>
+                  <p class="text-gray-700">In config files, use patterns like **/*.pug to match all .pug files recursively</p>
+                </div>
+                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-4 rounded">
+                  <p class="font-semibold text-gray-900 mb-2">Separate data concerns:</p>
+                  <p class="text-gray-700">Use global.json for site-wide data (navigation, footer), page-specific JSON for content</p>
+                </div>
+                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-4 rounded">
+                  <p class="font-semibold text-gray-900 mb-2">Debug with --debug:</p>
+                  <p class="text-gray-700">When things don't work as expected, use the -d flag to see detailed processing information</p>
+                </div>
+                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-4 rounded">
+                  <p class="font-semibold text-gray-900 mb-2">Pretty print for development:</p>
+                  <p class="text-gray-700">Use --pretty flag during development for readable HTML output</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="bg-gray-50 border-t border-gray-200 mt-12">
+      <div class="container mx-auto px-6 py-8">
+        <div class="text-center">
+          <p class="text-gray-600 mb-4">Made with ❤️ by<a class="text-blue-600 hover_text-blue-800 font-semibold" href="https://github.com/megurock" target="_blank">megurock</a></p>
+          <div class="flex justify-center gap-6 text-sm"><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://github.com/megurock/pug-tail" target="_blank">GitHub</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://www.npmjs.com/package/pug-tail" target="_blank">npm</a><a class="text-gray-600 hover_text-blue-600 transition-colors" href="https://github.com/megurock/pug-tail/blob/main/LICENSE" target="_blank">MIT License</a>
+          </div>
+          <p class="text-gray-500 text-sm mt-4">© 2026 PugTail. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

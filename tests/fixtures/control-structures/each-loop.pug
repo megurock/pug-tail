@@ -1,0 +1,9 @@
+component Card()
+  - const { title } = $props
+  .card
+    h3= title
+
+- const items = ['Item 1', 'Item 2', 'Item 3']
+
+each item in items
+  Card(title=item)

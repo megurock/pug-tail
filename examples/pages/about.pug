@@ -1,0 +1,101 @@
+//- About Page (Slots & Props Demo)
+//- 
+//- Data loading strategy:
+//- 1. Global data (global.json): Loaded via config, accessed as global.*
+//- 2. Page data (about.json): Loaded via $dataFiles, accessed directly
+//- 
+//- See index.pug for detailed explanation of data loading.
+
+//- Load page-specific data files
+- const $dataFiles = ['/data/about.json']
+
+include ../components/Layout.pug
+include ../components/Card.pug
+include ../components/CodeBlock.pug
+
+Layout(
+  title=pageTitle
+  description=pageDescription
+)
+  slot(main)
+    .bg-gradient-to-br.from-purple-50.to-pink-50.min-h-screen.py-12.px-4
+      
+      .max-w-4xl.mx-auto
+        
+        //- Header
+        header.text-center.mb-12
+          a.inline-block.text-blue-600.hover_text-blue-800.mb-4(
+            href=header.backLink.href
+          )= header.backLink.text
+          h1.text-5xl.font-bold.text-gray-900.mb-4= header.title
+          p.text-xl.text-gray-600= header.subtitle
+        
+        //- Sections
+        each section in sections
+          section.mb-12
+            h2.text-3xl.font-bold.text-gray-900.mb-6= section.title
+            
+            if section.description
+              p.text-gray-700.mb-6
+                = section.description
+                if section.id === 'props'
+                  |  
+                  code.bg-gray-200.px-2.py-1.rounded $props
+            
+            //- Code Blocks
+            if section.codeBlocks
+              each codeBlock in section.codeBlocks
+                if codeBlock.title
+                  p.text-gray-700.mb-6= codeBlock.title
+                
+                CodeBlock(language="pug")
+                  slot(code)= codeBlock.code
+            
+            //- Examples - Use case/when for cleaner code
+            .bg-white.rounded-lg.p-6.shadow-lg
+              case section.id
+                when 'props'
+                  p.text-gray-600.mb-4.font-semibold Result:
+                  each example in section.examples
+                    Card(
+                      title=example.title
+                      variant=example.variant
+                    )
+                      slot(content)
+                        p= example.content
+                
+                when 'slots'
+                  p.text-gray-600.mb-4.font-semibold Result:
+                  Card(
+                    title=section.example.title
+                    variant=section.example.variant
+                    hasFooter=section.example.hasFooter
+                  )
+                    slot(content)
+                      p= section.example.content
+                    slot(footer)
+                      button.bg-blue-600.text-white.px-4.py-2.rounded.hover_bg-blue-700.transition-colors= section.example.footer
+                
+                when 'default'
+                  p.text-gray-600.mb-4.font-semibold Card with default content:
+                  Card(
+                    title=section.example.title
+                    variant=section.example.variant
+                  )
+                
+                when 'conditional'
+                  each example in section.examples
+                    p.text-gray-600.mb-4.font-semibold(class=example.label ? 'mt-6' : '')= example.label
+                    Card(
+                      title=example.title
+                      variant=example.variant
+                      hasFooter=example.hasFooter
+                    )
+                      slot(content)
+                        p= example.content
+                      if example.footerButtons
+                        slot(footer)
+                          .flex.gap-2
+                            each btn in example.footerButtons
+                              - const btnClass = btn.variant === 'ghost' ? 'bg-white bg-opacity-20 hover_bg-opacity-30' : 'bg-white text-green-600 font-semibold hover_bg-opacity-90'
+                              button(class=`${btnClass} px-3 py-1 rounded text-sm`)= btn.text

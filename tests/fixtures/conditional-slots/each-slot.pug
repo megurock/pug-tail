@@ -1,0 +1,10 @@
+component List()
+  - const items = ['A', 'B']
+  ul
+    each item in items
+      li
+        slot(item)
+
+List()
+  slot(item)
+    strong Item

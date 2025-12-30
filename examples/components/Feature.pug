@@ -1,0 +1,7 @@
+component Feature()
+  - const { icon, title, description } = $props
+  .flex.items-start.space-x-4.p-6.bg-white.rounded-lg.shadow-sm.border.border-gray-100.hover_border-blue-200.transition-all
+    .text-3xl.flex-shrink-0= icon
+    div
+      h4.font-semibold.text-gray-900.mb-1= title
+      p.text-sm.text-gray-600= description
