@@ -13,7 +13,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    exclude: ['**/node_modules/**', '**/dist/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/pug-master/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -23,6 +23,7 @@ export default defineConfig({
         'tests/**',
         '**/*.test.ts',
         '**/*.config.ts',
+        'pug-master/**',
       ],
     },
   },

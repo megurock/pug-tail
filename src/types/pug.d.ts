@@ -45,6 +45,9 @@ export interface Attribute {
 export interface AttributeBlock {
   type: 'AttributeBlock'
   val: string
+  line?: number
+  column?: number
+  filename?: string
 }
 
 export interface Text extends BaseNode {

@@ -334,5 +334,94 @@ describe('transform with fixtures', () => {
       expect(result.html).toContain('Default Body')
       expect(result.html).toContain('Default Footer')
     })
+
+    test('should handle multiple root elements', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'edge-cases',
+        'multiple-roots',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify that multiple root elements are preserved
+      expect(result.html).toContain('<header>Header</header>')
+      expect(result.html).toContain('<main>Content</main>')
+      expect(result.html).toContain('<footer>Footer</footer>')
+      // Attributes are not passed to root elements (fallthrough disabled)
+      expect(result.html).not.toContain('my-layout')
+    })
+  })
+
+  describe('attributes', () => {
+    test('should handle basic attributes', () => {
+      const { pug, html: expectedHtml } = loadFixture('attributes', 'basic')
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify that attributes are passed correctly
+      expect(result.html).toContain('<h2>Hello</h2>')
+      expect(result.html).toContain('Count: 5')
+    })
+
+    test('should handle attribute fallthrough', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'attributes',
+        'fallthrough',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify that attributes are passed through to root element
+      expect(result.html).toContain('class="card my-card"')
+      expect(result.html).toContain('id="card-1"')
+      expect(result.html).toContain('data-test="value"')
+    })
+
+    test('should preserve attribute types', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'attributes',
+        'type-preservation',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify that types are preserved
+      expect(result.html).toContain('String: Hello')
+      expect(result.html).toContain('Number: 5')
+      expect(result.html).toContain('Boolean: true')
+      expect(result.html).toContain('Calculation: 15')
+    })
   })
 })

@@ -17,8 +17,9 @@
     "dist"
   ],
   "scripts": {
+    "prepare": "lefthook install",
     "start": "npm run test:dev",
-    "build": "tsc && tsc-alias",
+    "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:dev": "vitest --ui",
@@ -26,7 +27,9 @@
     "check:format": "biome format .",
     "check:lint": "biome lint .",
     "check:types": "tsc --noEmit",
-    "fix": "biome check --write ."
+    "fix": "biome check --write .",
+    "playground": "node playground/verify-ast.mjs",
+    "playground:ts": "tsx playground/verify-ast.ts"
   },
   "keywords": [
     "pug",

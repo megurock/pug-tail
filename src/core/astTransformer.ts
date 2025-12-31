@@ -9,6 +9,13 @@ import type { NodeLocation, SlotDefinition } from '@/types'
 import type { Block, Node, Tag } from '@/types/pug'
 import { getNodeLocationObject, isCapitalizedTag } from '@/utils/astHelpers'
 import {
+  addAttributeFallthrough,
+  createAttributesCode,
+  extractAttributes,
+  findSingleRootElement,
+  hasMultipleRoots,
+} from '@/utils/attributes'
+import {
   extractComponentDefinition,
   extractSlotName,
   isComponentDefinitionNode,
@@ -192,6 +199,11 @@ export class ASTTransformer {
 
       // Copy the component and replace slots.
       const componentBodyCopy = deepCloneBlock(component.body)
+
+      // Phase 2: Extract and inject attributes
+      const attributes = extractAttributes(callNode as Tag)
+      this.injectAttributes(componentBodyCopy, attributes, componentName)
+
       const result = this.replaceSlots(
         componentBodyCopy,
         providedSlots,
@@ -342,6 +354,46 @@ export class ASTTransformer {
    */
   private extractCallName(callNode: Tag): string {
     return callNode.name
+  }
+
+  /**
+   * Injects attributes into the component body.
+   *
+   * Phase 2 implementation:
+   * 1. Inserts a Code node at the beginning of the component body to make
+   *    the attributes object available.
+   * 2. Automatically adds &attributes to the single root element for
+   *    attribute fallthrough.
+   * 3. Warns if there are multiple root elements (fallthrough disabled).
+   *
+   * @param componentBody - The component body Block (already cloned)
+   * @param attributes - Map of attribute names to JavaScript expression values
+   * @param componentName - The component name (for warning messages)
+   */
+  private injectAttributes(
+    componentBody: Block,
+    attributes: Map<string, string>,
+    componentName: string,
+  ): void {
+    // 1. Create and insert the attributes Code node at the beginning
+    const attributesCode = createAttributesCode(attributes)
+    componentBody.nodes.unshift(attributesCode)
+
+    // 2. Handle attribute fallthrough
+    const singleRoot = findSingleRootElement(componentBody)
+
+    if (singleRoot) {
+      // Single root element: automatically add &attributes
+      addAttributeFallthrough(singleRoot)
+    } else if (hasMultipleRoots(componentBody)) {
+      // Multiple root elements: warn and disable fallthrough
+      console.warn(
+        `[pug-tail] Component "${componentName}" has multiple root elements. ` +
+          `Attribute fallthrough is disabled. ` +
+          `Use &attributes(attrs) explicitly if needed.`,
+      )
+    }
+    // If there are no root elements (empty component), do nothing
   }
 
   /**

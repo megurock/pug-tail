@@ -44,6 +44,49 @@ function createPugRuntime() {
     rethrow: (err: Error) => {
       throw err
     },
+    // &attributes で使用される merge 関数
+    merge: (...args: unknown[]) => {
+      // 最初の引数が配列の場合、それを展開
+      const sources: Record<string, unknown>[] =
+        args.length === 1 && Array.isArray(args[0])
+          ? args[0]
+          : (args as Record<string, unknown>[])
+
+      const base: Record<string, unknown> = {}
+
+      for (const source of sources) {
+        if (!source || typeof source !== 'object') continue
+
+        for (const [key, val] of Object.entries(
+          source as Record<string, unknown>,
+        )) {
+          if (key === 'class') {
+            // class 属性は特別扱い: 配列またはスペース区切り文字列を結合
+            const baseClass = base.class
+            const sourceClass = val
+
+            if (baseClass && sourceClass) {
+              const baseClasses = Array.isArray(baseClass)
+                ? baseClass
+                : String(baseClass).split(' ')
+              const sourceClasses = Array.isArray(sourceClass)
+                ? sourceClass
+                : String(sourceClass).split(' ')
+
+              base.class = [...baseClasses, ...sourceClasses]
+                .filter(Boolean)
+                .join(' ')
+            } else {
+              base.class = sourceClass || baseClass
+            }
+          } else {
+            // その他の属性は上書き
+            base[key] = val
+          }
+        }
+      }
+      return base
+    },
   }
 }
 

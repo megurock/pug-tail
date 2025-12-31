@@ -1,0 +1,8 @@
+//- Basic attributes passing
+component Card()
+  - const { title, count, ...attrs } = attributes
+  .card&attributes(attrs)
+    h2= title
+    p Count: #{count}
+
+Card(title="Hello", count=5)

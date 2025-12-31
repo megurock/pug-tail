@@ -1,0 +1,10 @@
+//- Type preservation
+component TypeTest()
+  - const { str, num, bool, ...attrs } = attributes
+  .result&attributes(attrs)
+    p= 'String: ' + str
+    p= 'Number: ' + num
+    p= 'Boolean: ' + bool
+    p= 'Calculation: ' + (num + 10)
+
+TypeTest(str="Hello", num=5, bool=true)
