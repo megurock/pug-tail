@@ -6,7 +6,7 @@
 
 import walk from 'pug-walk'
 import type { NodeLocation, SlotDefinition } from '@/types'
-import type { Block, Node, Tag } from '@/types/pug'
+import type { Block, Extends, Include, Node, Tag } from '@/types/pug'
 import { getNodeLocationObject, isCapitalizedTag } from '@/utils/astHelpers'
 import {
   addAttributeFallthrough,
@@ -78,7 +78,10 @@ export class ASTTransformer {
     const transformed = this.expandComponents(ast)
 
     // 3. Remove component definition nodes.
-    return this.removeComponentDefinitions(transformed)
+    const withoutDefinitions = this.removeComponentDefinitions(transformed)
+
+    // 4. Flatten Include nodes (replace with their content)
+    return this.flattenIncludes(withoutDefinitions)
   }
 
   /**
@@ -86,14 +89,27 @@ export class ASTTransformer {
    *
    * Detects all component definitions within the AST and
    * registers them with the ComponentRegistry.
+   * Also processes Include and Extends nodes to register components from included/extended files.
    *
    * @param ast - The AST to search.
    */
   private detectAndRegisterComponents(ast: Node): void {
     walk(ast, (node: Node) => {
+      // Register component definitions in the current AST
       if (isComponentDefinitionNode(node)) {
         const definition = extractComponentDefinition(node, this.errorHandler)
         this.registry.register(definition)
+      }
+
+      // Process Include and Extends nodes to register components from included/extended files
+      // pug-load adds file.ast property to Include and Extends nodes
+      if (node.type === 'Include' || node.type === 'Extends') {
+        const fileNode = node as Include | Extends
+        if (fileNode.file?.ast) {
+          const fileAst = fileNode.file.ast
+          // Recursively detect and register components in the included/extended AST
+          this.detectAndRegisterComponents(fileAst)
+        }
       }
     })
   }
@@ -103,6 +119,7 @@ export class ASTTransformer {
    *
    * Detects all component calls within the AST and
    * replaces them with the corresponding component definitions.
+   * Also processes Include and Extends nodes to expand components in included/extended files.
    *
    * @param ast - The AST to transform.
    * @returns The transformed AST.
@@ -117,6 +134,21 @@ export class ASTTransformer {
       return {
         ...ast,
         block: expandedBlock,
+      }
+    }
+
+    // Process Include and Extends nodes to expand components in included/extended AST
+    if (ast.type === 'Include' || ast.type === 'Extends') {
+      const fileNode = ast as Include | Extends
+      if (fileNode.file?.ast) {
+        const expandedFileAst = this.expandComponents(fileNode.file.ast)
+        return {
+          ...fileNode,
+          file: {
+            ...fileNode.file,
+            ast: expandedFileAst,
+          },
+        } as Node
       }
     }
 
@@ -400,6 +432,7 @@ export class ASTTransformer {
    * Removes component definition nodes.
    *
    * Removes component definition nodes from the transformed AST.
+   * Also processes Include and Extends nodes to remove component definitions from included/extended files.
    *
    * @param ast - The AST to transform.
    * @returns An AST with component definition nodes removed.
@@ -431,6 +464,75 @@ export class ASTTransformer {
       return {
         ...ast,
         block: processedBlock,
+      }
+    }
+
+    // Process Include and Extends nodes to remove component definitions from included/extended AST
+    if (ast.type === 'Include' || ast.type === 'Extends') {
+      const fileNode = ast as Include | Extends
+      if (fileNode.file?.ast) {
+        const processedFileAst = this.removeComponentDefinitions(
+          fileNode.file.ast,
+        )
+        return {
+          ...fileNode,
+          file: {
+            ...fileNode.file,
+            ast: processedFileAst,
+          },
+        } as Node
+      }
+    }
+
+    // Return other nodes as is.
+    return ast
+  }
+
+  /**
+   * Flattens Include and Extends nodes by replacing them with their content.
+   *
+   * pug-code-gen does not support Include or Extends nodes, so we need to replace them
+   * with the actual content from the included/extended files.
+   *
+   * @param ast - The AST to transform.
+   * @returns An AST with Include and Extends nodes replaced by their content.
+   */
+  private flattenIncludes(ast: Node): Node {
+    if (ast.type === 'Block') {
+      const result: Block = {
+        type: 'Block',
+        nodes: [],
+        line: ast.line,
+        column: ast.column,
+        filename: ast.filename,
+      }
+
+      for (const node of ast.nodes) {
+        if (node.type === 'Include' || node.type === 'Extends') {
+          const fileNode = node as Include | Extends
+          if (fileNode.file?.ast) {
+            // Replace Include/Extends node with its content
+            const fileAst = fileNode.file.ast as Block
+            // Recursively flatten includes/extends in the included/extended content
+            const flattenedFile = this.flattenIncludes(fileAst) as Block
+            // Add all nodes from the included/extended file
+            result.nodes.push(...flattenedFile.nodes)
+          }
+        } else {
+          // Process node recursively
+          const processed = this.flattenIncludes(node)
+          result.nodes.push(processed)
+        }
+      }
+
+      return result
+    }
+
+    if (ast.type === 'Tag' && ast.block) {
+      const flattenedBlock = this.flattenIncludes(ast.block) as Block
+      return {
+        ...ast,
+        block: flattenedBlock,
       }
     }
 

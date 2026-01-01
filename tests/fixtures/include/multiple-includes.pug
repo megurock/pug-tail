@@ -1,0 +1,11 @@
+include Card.pug
+include Button.pug
+
+Card()
+  slot(header)
+    h1 Contact Form
+  slot(body)
+    form
+      input(type="text" placeholder="Name")
+      Button()
+        | Submit

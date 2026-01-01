@@ -1,0 +1,11 @@
+extends Layout.pug
+
+Layout()
+  slot(head)
+    title My Page with Extends
+    meta(charset="utf-8")
+  slot(main)
+    h1 Main Content
+    p This page uses extends to load components
+  slot(footer)
+    p © 2024 My Site

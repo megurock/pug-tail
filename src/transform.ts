@@ -7,6 +7,7 @@
 
 import generateCode from 'pug-code-gen'
 import lex from 'pug-lexer'
+import load from 'pug-load'
 import parse from 'pug-parser'
 import { ASTTransformer } from '@/core/astTransformer.js'
 import { ComponentRegistry } from '@/core/componentRegistry.js'
@@ -31,6 +32,9 @@ export interface TransformOptions extends ErrorHandlerOptions {
     /** Include compile-time debug info */
     compileDebug?: boolean
   }
+
+  /** Base directory for absolute includes (required for absolute paths) */
+  basedir?: string
 }
 
 /**
@@ -104,6 +108,23 @@ export function transform(
   } catch (error) {
     throw new Error(
       `Parsing failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+
+  // 2.5. Load includes and extends (resolve dependencies)
+  try {
+    ast = load(ast, {
+      lex,
+      parse,
+      basedir: options.basedir,
+      filename: errorHandlerOptions.filename,
+    })
+    if (debug) {
+      console.log('[pug-tail] Loaded includes/extends')
+    }
+  } catch (error) {
+    throw new Error(
+      `Loading includes/extends failed: ${error instanceof Error ? error.message : String(error)}`,
     )
   }
 

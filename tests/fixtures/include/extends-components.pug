@@ -1,0 +1,9 @@
+extends components.pug
+
+Container()
+  slot(content)
+    Section()
+      slot(title)
+        h2 About Us
+      slot(body)
+        p We are a company that uses pug-tail

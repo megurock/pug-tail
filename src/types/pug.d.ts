@@ -106,6 +106,34 @@ export interface When extends BaseNode {
   debug: boolean
 }
 
+export interface FileReference {
+  type: 'FileReference'
+  path: string
+  filename?: string
+  fullPath?: string
+  str?: string
+  raw?: Buffer
+  ast?: Block
+}
+
+export interface Include extends BaseNode {
+  type: 'Include'
+  file: FileReference
+  block: Block | null
+}
+
+export interface Extends extends BaseNode {
+  type: 'Extends'
+  file: FileReference
+  block: Block
+}
+
+export interface RawInclude extends BaseNode {
+  type: 'RawInclude'
+  file: FileReference
+  filters: unknown[]
+}
+
 // Union of all Node types.
 export type Node =
   | Block
@@ -118,6 +146,9 @@ export type Node =
   | Each
   | Case
   | When
+  | Include
+  | Extends
+  | RawInclude
 
 /**
  * Token type for pug-lexer.

@@ -1,0 +1,11 @@
+component Container()
+  .container
+    slot(content)
+      p Default container content
+
+component Section()
+  section.section
+    slot(title)
+      h2 Default Section Title
+    slot(body)
+      p Default section body
