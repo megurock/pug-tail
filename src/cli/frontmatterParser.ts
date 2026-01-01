@@ -18,6 +18,8 @@ export interface FrontmatterResult {
   content: string
   /** Whether frontmatter was found. */
   hasFrontmatter: boolean
+  /** Data files to load (from @dataFiles directive). */
+  dataFiles: string[]
 }
 
 /**
@@ -56,6 +58,7 @@ export function parseFrontmatter(source: string): FrontmatterResult {
       data: {},
       content: source,
       hasFrontmatter: false,
+      dataFiles: [],
     }
   }
 
@@ -78,6 +81,7 @@ export function parseFrontmatter(source: string): FrontmatterResult {
       data: {},
       content: source,
       hasFrontmatter: false,
+      dataFiles: [],
     }
   }
 
@@ -91,11 +95,27 @@ export function parseFrontmatter(source: string): FrontmatterResult {
 
   // Parse YAML
   let data: Record<string, unknown> = {}
+  let dataFiles: string[] = []
+
   try {
     const parsed = YAML.parse(frontmatterContent)
     // Ensure we have an object
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      data = parsed as Record<string, unknown>
+      const parsedObj = parsed as Record<string, unknown>
+
+      // Extract @dataFiles directive
+      if ('@dataFiles' in parsedObj) {
+        const dataFilesValue = parsedObj['@dataFiles']
+        if (Array.isArray(dataFilesValue)) {
+          dataFiles = dataFilesValue.filter(
+            (item): item is string => typeof item === 'string',
+          )
+        }
+        // Remove @dataFiles from data (it's a directive, not data)
+        delete parsedObj['@dataFiles']
+      }
+
+      data = parsedObj
     }
   } catch (error) {
     throw new Error(
@@ -109,5 +129,6 @@ export function parseFrontmatter(source: string): FrontmatterResult {
     data,
     content,
     hasFrontmatter: true,
+    dataFiles,
   }
 }

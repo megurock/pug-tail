@@ -1,10 +1,31 @@
 # CLI 機能拡張 - 実装進捗
 
-Phase A-1 の実装が完了しました。
+Phase A および Phase B の実装が完了しました！
 
-## ✅ Phase A-1: 複数ファイル/ディレクトリ処理（完了）
+## 📊 全体の進捗
 
-### 実装したファイル
+### Phase A: 必須機能（3-4日）✅ 完了
+- [x] Step A-1: 複数ファイル/ディレクトリ処理（1-2日）✅
+- [x] Step A-2: データ注入機能（1日）✅
+- [x] Step A-3: basedir サポート（0.5日）✅
+
+### Phase B: フロントマター（2-3日）✅ 完了
+- [x] Step B-1: YAML フロントマターのパース（1日）✅
+- [x] Step B-2: データマージロジック（1日）✅
+- [x] Step B-3: transform への統合（0.5日）✅
+- [x] Step B-4: `"@dataFiles"` ディレクティブ（0.5日）✅ **NEW**
+
+### Phase C: Watch モード（2-3日）
+- [ ] Step C-1: 基本的な Watch 機能（1-2日）
+- [ ] Step C-2: 依存関係追跡（1日）
+
+---
+
+## ✅ Phase A: 必須機能（完了）
+
+### Step A-1: 複数ファイル/ディレクトリ処理 ✅
+
+#### 実装したファイル
 
 1. **`src/cli/pathResolver.ts`** - パス解決ユーティリティ
    - `resolveOutputPath()` - 出力パスの計算
@@ -26,73 +47,36 @@ Phase A-1 の実装が完了しました。
      - `-P, --pretty` - 整形された出力
      - `-s, --silent` - サイレントモード
 
-4. **`tests/unit/cli/pathResolver.test.ts`** - ユニットテスト
-   - `shouldIgnoreFile()` のテスト
-   - `isPugFile()` のテスト
-   - `resolveOutputPath()` のテスト
+4. **テスト**
+   - `tests/unit/cli/pathResolver.test.ts` - ユニットテスト
+   - `tests/integration/cli.test.ts` - 統合テスト（14 tests）
 
 5. **テストフィクスチャ**
-   - `tests/fixtures/cli/index.pug`
-   - `tests/fixtures/cli/about.pug`
-   - `tests/fixtures/cli/_layout.pug` (無視対象)
-   - `tests/fixtures/cli/user_profile.pug` (スネークケース)
+   - `tests/fixtures/cli/` - 基本的な Pug ファイル
+   - `tests/fixtures/cli-data/` - データファイル
+   - `tests/fixtures/cli-data-test/` - データテスト用 Pug
+   - `tests/fixtures/cli-with-basedir/` - basedir テスト用
 
-### 追加した依存関係
-
-```json
-{
-  "dependencies": {
-    "glob": "^10.3.10",
-    "yaml": "^2.3.4",      // Phase B 用
-    "chokidar": "^3.5.3"   // Phase C 用
-  },
-  "devDependencies": {
-    "@types/glob": "^8.1.0"
-  }
-}
-```
-
-### 主要な機能
-
-#### 1. 複数ファイル処理
-
-実際の fixtures ディレクトリを使った実行例：
+#### 主要な機能
 
 ```bash
 # 単一ファイル
-pug-tail tests/fixtures/cli/index.pug -o /tmp/output/
-# → /tmp/output/index.html
+pug-tail src/index.pug -o dist/
 
 # 複数ファイル
-pug-tail tests/fixtures/cli/index.pug tests/fixtures/cli/about.pug -o /tmp/output/
-# → /tmp/output/index.html
-# → /tmp/output/about.html
+pug-tail src/index.pug src/about.pug -o dist/
 
-# スネークケースのファイル（処理される）
-pug-tail tests/fixtures/cli/user_profile.pug -o /tmp/output/
-# → /tmp/output/user_profile.html ✅
+# ディレクトリ全体（再帰的、_ファイルは無視）
+pug-tail src/ -o dist/
 
-# _ で始まるファイル（無視される）
-pug-tail tests/fixtures/cli/_layout.pug -o /tmp/output/
-# → 無視される（出力なし）❌
-
-# ディレクトリ全体（再帰的）
-pug-tail tests/fixtures/cli/ -o /tmp/output/
-# → /tmp/output/index.html ✅
-# → /tmp/output/about.html ✅
-# → /tmp/output/user_profile.html ✅
-# → _layout.pug は無視 ❌
+# Glob パターン
+pug-tail "src/**/*.pug" -o dist/
 
 # 整形された出力
-pug-tail tests/fixtures/cli/index.pug -o /tmp/output/ -P
-
-# デバッグモード
-pug-tail tests/fixtures/cli/ -o /tmp/output/ -d
+pug-tail src/ -o dist/ -P
 ```
 
-#### 2. `_` ファイルの正しい無視ルール
-
-pug-cli と同じ動作：
+#### `_` ファイルの無視ルール
 
 ✅ **処理される:**
 - `src/my_component.pug` (スネークケース OK)
@@ -102,70 +86,452 @@ pug-cli と同じ動作：
 - `src/_layout.pug` (先頭に `_`)
 - `src/_components/Card.pug` (パスに `/_`)
 
-#### 3. ディレクトリ構造の維持
+---
 
-```
-src/
-├── index.pug
-└── pages/
-    └── about.pug
+### Step A-2: データ注入機能 ✅
 
-↓ pug-tail src/ -o dist/
+#### 実装したファイル
 
-dist/
-├── index.html
-└── pages/
-    └── about.html
-```
+1. **`src/cli/dataLoader.ts`** - データ読み込み
+   - `loadData()` - JSON 文字列/ファイルの読み込み
+   - `mergeData()` - データのマージ
 
-#### 4. 後方互換性
+2. **`src/transform.ts`** - データオプション追加
+   - `TransformOptions.data` - テンプレートに注入するデータ
 
-単一ファイルモードも引き続き動作：
+3. **統合**
+   - `FileProcessor` でグローバルデータをサポート
+   - CLI で `-O, --obj` オプション追加
 
-```bash
-# 従来通り動作
-pug-tail input.pug -o output.html
-pug-tail input.pug -f ast -o output.json
-```
-
-### テスト結果
+#### 使用例
 
 ```bash
-npm test
+# JSON ファイルから
+pug-tail src/ -o dist/ -O data.json
+
+# JSON 文字列（注: シェルエスケープに注意）
+pug-tail src/ -o dist/ -O '{"title": "My Site", "year": 2025}'
 ```
 
-- pathResolver のユニットテスト: ✅ すべてパス
-- 既存テスト: ✅ 壊れていない
+**data.json:**
+```json
+{
+  "siteName": "My Site",
+  "year": 2025,
+  "navigation": [
+    { "label": "Home", "url": "/" },
+    { "label": "About", "url": "/about" }
+  ]
+}
+```
 
-### 次のステップ
-
-**Step A-2: データ注入機能（-O, --obj）**
-
-1. JSON 文字列のパース
-2. JSON/JavaScript ファイルの読み込み
-3. データの注入
-4. テストの作成
-
-推定時間: 1日
+**template.pug:**
+```pug
+doctype html
+html
+  head
+    title= siteName
+  body
+    h1 Welcome to #{siteName}
+    footer
+      p © #{year} #{siteName}
+```
 
 ---
 
-## 📊 全体の進捗
+### Step A-3: basedir サポート ✅
 
-### Phase A: 必須機能（3-4日）
-- [x] Step A-1: 複数ファイル/ディレクトリ処理（1-2日）✅
-- [ ] Step A-2: データ注入機能（1日）
-- [ ] Step A-3: basedir サポート（0.5日）
+#### 実装内容
 
-### Phase B: フロントマター（2-3日）
-- [ ] Step B-1: フロントマターのパース（1日）
-- [ ] Step B-2: データマージロジック（1日）
-- [ ] Step B-3: transform への統合（0.5日）
+CLI に `-b, --basedir` オプションを追加し、絶対パスの includes/extends を解決。
 
-### Phase C: Watch モード（2-3日、後回し）
-- [ ] Step C-1: 基本的な Watch 機能（1-2日）
-- [ ] Step C-2: 依存関係追跡（1日）
+#### 使用例
+
+```bash
+pug-tail src/pages/ -o dist/ -b src/
+```
+
+**src/pages/index.pug:**
+```pug
+extends /layouts/_base.pug
+
+block content
+  h1 Home Page
+```
+
+**src/layouts/_base.pug:**
+```pug
+doctype html
+html
+  head
+    title My Site
+  body
+    block content
+```
+
+basedir なしでは `/layouts/_base.pug` が見つからずエラーになりますが、basedir を指定することで正しく解決されます。
+
+---
+
+## ✅ Phase B: フロントマター（完了）
+
+### Step B-1: YAML フロントマターのパース ✅
+
+#### 実装したファイル
+
+1. **`src/cli/frontmatterParser.ts`** - フロントマターパーサー
+   - `parseFrontmatter()` - YAML フロントマターをパース
+   - フロントマターを除去したコンテンツを返す
+   
+2. **`tests/unit/cli/frontmatterParser.test.ts`** - ユニットテスト
+
+#### フロントマターの書式
+
+```pug
+---
+title: My Page Title
+description: A description of my page
+author: John Doe
+year: 2025
+tags:
+  - test
+  - frontmatter
+meta:
+  keywords:
+    - pug
+    - template
+---
+doctype html
+html
+  head
+    title= title
+    meta(name="description" content=description)
+  body
+    h1= title
+    p Author: #{author}
+```
+
+#### 動作
+
+1. `---` で囲まれた YAML ブロックをパース
+2. データをオブジェクトとして抽出
+3. フロントマター部分を除去した Pug コードを返す
+4. Pug レクサーには YAML が見えない（構文エラー回避）
+
+---
+
+### Step B-2: データマージロジック ✅
+
+#### 実装内容
+
+フロントマターデータと CLI データ（`-O` オプション）をマージ。
+
+**優先順位:** `frontmatter > -O option`
+
+#### 使用例
+
+**template.pug:**
+```pug
+---
+title: Frontmatter Title
+description: From frontmatter
+---
+doctype html
+html
+  head
+    title= title
+    meta(name="description" content=description)
+  body
+    h1= title
+    if siteName
+      p Site: #{siteName}
+```
+
+**コマンド:**
+```bash
+pug-tail template.pug -o output.html -O '{"title":"CLI Title","siteName":"My Site"}'
+```
+
+**結果:**
+- `title`: "Frontmatter Title" （フロントマターが優先）
+- `description`: "From frontmatter" （フロントマターのみ）
+- `siteName`: "My Site" （CLI データのみ）
+
+---
+
+### Step B-3: transform への統合 ✅
+
+#### 実装内容
+
+1. **`FileProcessor`** を更新
+   - ファイル読み込み後、フロントマターをパース
+   - データをマージ
+   - クリーンな Pug コードを transform に渡す
+
+2. **CLI 単一ファイルモード** を更新
+   - 同様の処理を追加
+
+#### 統合の流れ
+
+```
+1. ファイル読み込み
+   ↓
+2. parseFrontmatter(source)
+   ↓ { data, content }
+3. mergeData(cliData, frontmatterData)
+   ↓ mergedData
+4. transform(content, { data: mergedData })
+   ↓
+5. HTML 出力
+```
+
+---
+
+### Step B-4: `"@dataFiles"` ディレクティブ ✅
+
+#### 実装内容
+
+フロントマターで外部データファイルを指定できる機能を追加。
+
+#### `"@dataFiles"` ディレクティブ
+
+ページ固有のデータファイルを読み込むためのディレクティブ：
+
+```pug
+---
+# ページ固有データ（直接定義）
+title: About Us
+
+# 外部ファイルから読み込み（クォート必須）
+"@dataFiles":
+  - data/common.json
+  - data/about.json
+---
+h1= title
+p= description
+```
+
+**パス解決ルール：**
+
+1. **相対パス（デフォルト）** - ファイルからの相対パス
+   ```yaml
+   "@dataFiles":
+     - data/common.json       # 同じディレクトリ
+     - ../shared/global.json  # 親ディレクトリ
+     - ./local.json           # 明示的な相対パス
+   ```
+
+2. **絶対パス** - basedir からの絶対パス（basedir 必須）
+   ```yaml
+   "@dataFiles":
+     - /data/common.json      # basedir/data/common.json
+   ```
+   ```bash
+   pug-tail src/pages/about.pug -o dist/ -b src/
+   ```
+
+**データマージ順序：**
+```
+CLI -O → "@dataFiles" → frontmatter 直接定義
+```
+
+#### 使用例
+
+**プロジェクト構造：**
+```
+project/
+├── src/
+│   ├── pages/
+│   │   └── about.pug
+│   └── data/
+│       ├── common.json
+│       └── about.json
+```
+
+**about.pug：**
+```pug
+---
+# ページ固有データ
+pageTitle: 私たちについて
+
+# 共通データとページ固有データを読み込み
+"@dataFiles":
+  - ../data/common.json
+  - ../data/about.json
+---
+doctype html
+html
+  head
+    title= pageTitle
+  body
+    h1= pageTitle
+    p= description
+    footer
+      p © #{year} #{siteName}
+```
+
+**data/common.json：**
+```json
+{
+  "siteName": "My Site",
+  "year": 2025
+}
+```
+
+**data/about.json：**
+```json
+{
+  "description": "We are a great company"
+}
+```
+
+**コマンド：**
+```bash
+pug-tail src/pages/about.pug -o dist/
+```
+
+**結果：**
+- `pageTitle`: "私たちについて" (frontmatter)
+- `siteName`: "My Site" (common.json)
+- `year`: 2025 (common.json)
+- `description`: "We are a great company" (about.json)
+
+#### ユースケース
+
+1. **ページごとに異なるデータソース**
+   - index.pug → data/index.json
+   - about.pug → data/about.json + data/team.json
+
+2. **共通データ + ページ固有データ**
+   - すべてのページが common.json を読み込む
+   - 各ページが独自のデータも持つ
+
+3. **basedir を使った絶対パス**
+   ```bash
+   pug-tail src/pages/ -o dist/ -b src/
+   ```
+   ```pug
+   ---
+   "@dataFiles":
+     - /data/common.json  # src/data/common.json
+   ---
+   ```
+
+---
+
+## 🧪 テスト状況
+
+### テストの種類
+
+1. **Unit Tests** - 個別モジュールのテスト
+   - `pathResolver.test.ts` - パス解決ロジック
+   - `dataLoader.test.ts` - データ読み込み
+   - `frontmatterParser.test.ts` - フロントマターパース
+
+2. **Integration Tests** - CLI の統合テスト
+   - 単一/複数ファイル処理
+   - データ注入
+   - フロントマターサポート
+   - basedir サポート
+   - 出力フォーマット
+   - エラーハンドリング
+
+### テスト結果
+
+```
+✅ Test Files: 24 passed
+✅ Tests: 218 passed
+✅ Duration: ~6s
+```
+
+すべてのテストがパスしています！
+
+---
+
+## 📦 追加した依存関係
+
+```json
+{
+  "dependencies": {
+    "glob": "^10.3.10",      // glob パターン対応
+    "yaml": "^2.3.4",        // YAML フロントマターパース
+    "chokidar": "^3.5.3"     // Watch モード用（Phase C）
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0"
+  }
+}
+```
+
+---
+
+## 🎯 次のステップ: Phase C - Watch モード
+
+### Step C-1: 基本的な Watch 機能（1-2日）
+
+- chokidar を使ったファイル監視
+- ファイル変更時の再コンパイル
+- 新規ファイルの追加/削除対応
+
+### Step C-2: 依存関係追跡（1日）
+
+- include/extends の依存関係を追跡
+- 依存ファイル変更時も再コンパイル
+- 循環依存の検出
+
+---
+
+## 📝 使用可能な CLI オプション（現状）
+
+```bash
+pug-tail [options] [files...]
+
+Output:
+  -o, --out <dir>           Output directory (or file for single input)
+  -E, --extension <ext>     Output file extension (default: .html)
+
+Data:
+  -O, --obj <str|path>      Data to inject (JSON string or file path)
+
+Pug:
+  -b, --basedir <path>      Base directory for absolute includes
+
+Formatting:
+  -P, --pretty              Pretty print HTML output
+  -f, --format <format>     Output format: html, ast, pug-code (default: html)
+
+Other:
+  -d, --debug               Enable debug output
+  -s, --silent              Silent mode (no log output)
+  -h, --help                Show help message
+  -v, --version             Show version number
+```
+
+---
+
+## 🎉 達成した目標
+
+### Phase A の目標 ✅
+- [x] pug-cli と同等の基本機能
+- [x] 複数ファイル/ディレクトリ処理
+- [x] データ注入
+- [x] basedir サポート
+- [x] 後方互換性の維持
+
+### Phase B の目標 ✅
+- [x] YAML フロントマターのパース
+- [x] データマージロジック（優先順位付き）
+- [x] 既存機能との統合
+- [x] エラーハンドリング
+
+### 品質 ✅
+- [x] 包括的なテストカバレッジ
+- [x] 型安全性
+- [x] エラーメッセージの改善
+- [x] デバッグモード
 
 ---
 
 **Updated:** 2025-01-01
+**Status:** Phase A & B Complete, Phase C Ready to Start
+**Test Status:** 218/218 Tests Passing ✅

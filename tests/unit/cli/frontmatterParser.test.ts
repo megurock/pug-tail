@@ -160,5 +160,62 @@ h1 Test`
         disabled: false,
       })
     })
+
+    it('should extract @dataFiles directive', () => {
+      const source = `---
+title: My Page
+"@dataFiles":
+  - data/common.json
+  - data/page.json
+---
+h1= title`
+
+      const result = parseFrontmatter(source)
+
+      expect(result.hasFrontmatter).toBe(true)
+      expect(result.dataFiles).toEqual(['data/common.json', 'data/page.json'])
+      expect(result.data).toEqual({ title: 'My Page' })
+      expect(result.data).not.toHaveProperty('@dataFiles')
+    })
+
+    it('should handle @dataFiles with flow style array', () => {
+      const source = `---
+title: Test
+"@dataFiles": [data/foo.json, data/bar.json]
+---
+h1= title`
+
+      const result = parseFrontmatter(source)
+
+      expect(result.dataFiles).toEqual(['data/foo.json', 'data/bar.json'])
+      expect(result.data).toEqual({ title: 'Test' })
+    })
+
+    it('should handle empty @dataFiles', () => {
+      const source = `---
+title: Test
+"@dataFiles": []
+---
+h1= title`
+
+      const result = parseFrontmatter(source)
+
+      expect(result.dataFiles).toEqual([])
+      expect(result.data).toEqual({ title: 'Test' })
+    })
+
+    it('should handle @dataFiles without other data', () => {
+      const source = `---
+"@dataFiles":
+  - data/all.json
+---
+h1= title`
+
+      const result = parseFrontmatter(source)
+
+      expect(result.hasFrontmatter).toBe(true)
+      expect(result.dataFiles).toEqual(['data/all.json'])
+      expect(result.data).toEqual({})
+    })
   })
 })

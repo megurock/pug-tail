@@ -283,6 +283,57 @@ describe('CLI Integration Tests', () => {
       // CLI data should be available when not in frontmatter
       expect(output).toContain('Site: Test Site')
     })
+
+    it('should load data from @dataFiles directive', () => {
+      const result = runCLI([
+        'tests/fixtures/cli-data-test/with-datafiles.pug',
+        '-o',
+        join(TEST_OUTPUT_DIR, 'with-datafiles.html'),
+      ])
+
+      expect(result.exitCode).toBe(0)
+
+      const output = readFileSync(
+        join(TEST_OUTPUT_DIR, 'with-datafiles.html'),
+        'utf-8',
+      )
+      // Frontmatter data
+      expect(output).toContain('<title>Page with Data Files</title>')
+      // From common.json
+      expect(output).toContain('Test Site')
+      expect(output).toContain('Common site data')
+      expect(output).toContain('© 2025 Test Site')
+      // From about.json
+      expect(output).toContain('About Us Page')
+      expect(output).toContain('This is loaded from page-specific data file')
+    })
+
+    it('should merge CLI data, @dataFiles, and frontmatter correctly', () => {
+      const tempDataPath = join(TEST_OUTPUT_DIR, 'temp-cli-data.json')
+      const tempData = {
+        cliValue: 'From CLI',
+        overrideMe: 'CLI value',
+      }
+      writeFileSync(tempDataPath, JSON.stringify(tempData), 'utf-8')
+
+      const result = runCLI([
+        'tests/fixtures/cli-data-test/with-datafiles.pug',
+        '-o',
+        join(TEST_OUTPUT_DIR, 'with-merge.html'),
+        '-O',
+        tempDataPath,
+      ])
+
+      expect(result.exitCode).toBe(0)
+
+      const output = readFileSync(
+        join(TEST_OUTPUT_DIR, 'with-merge.html'),
+        'utf-8',
+      )
+      // All three sources should be available
+      expect(output).toContain('Page with Data Files') // frontmatter
+      expect(output).toContain('Test Site') // @dataFiles
+    })
   })
 
   describe('Basedir support', () => {

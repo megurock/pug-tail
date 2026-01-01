@@ -133,10 +133,61 @@ export class FileProcessor {
       const source = readFileSync(absoluteInput, 'utf-8')
 
       // Parse frontmatter
-      const { data: frontmatterData, content } = parseFrontmatter(source)
+      const {
+        data: frontmatterData,
+        content,
+        dataFiles,
+      } = parseFrontmatter(source)
 
-      // Merge data: frontmatter > global data (-O option)
-      const mergedData = mergeData(this.options.data, frontmatterData)
+      // Load data from "@dataFiles" directive
+      let dataFilesData: Record<string, unknown> = {}
+      if (dataFiles.length > 0) {
+        for (const dataFile of dataFiles) {
+          try {
+            // Resolve path: absolute (from basedir) or relative (from input file)
+            let dataFilePath: string
+            if (dataFile.startsWith('/')) {
+              // Absolute path from basedir
+              if (this.options.transformOptions?.basedir) {
+                dataFilePath = resolve(
+                  this.options.transformOptions.basedir,
+                  dataFile.slice(1),
+                )
+              } else {
+                throw new Error(
+                  `Absolute path "${dataFile}" requires basedir option (-b, --basedir)`,
+                )
+              }
+            } else {
+              // Relative path from input file
+              const inputDir = getDirectory(absoluteInput)
+              dataFilePath = resolve(inputDir, dataFile)
+            }
+
+            const fileData = JSON.parse(readFileSync(dataFilePath, 'utf-8'))
+            dataFilesData = mergeData(dataFilesData, fileData)
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error)
+            if (!this.options.silent) {
+              console.error(
+                `Error loading data file "${dataFile}":`,
+                errorMessage,
+              )
+            }
+            throw new Error(
+              `Failed to load data file "${dataFile}": ${errorMessage}`,
+            )
+          }
+        }
+      }
+
+      // Merge data: CLI -O → @dataFiles → frontmatter direct
+      const mergedData = mergeData(
+        this.options.data,
+        dataFilesData,
+        frontmatterData,
+      )
 
       // Resolve output path
       const pathOptions: PathResolverOptions = {

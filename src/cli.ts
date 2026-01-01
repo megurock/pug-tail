@@ -312,10 +312,44 @@ function processSingleFile(options: CLIOptions): void {
   }
 
   // Parse frontmatter
-  const { data: frontmatterData, content } = parseFrontmatter(source)
+  const { data: frontmatterData, content, dataFiles } = parseFrontmatter(source)
 
-  // Merge data: frontmatter > global data (-O option)
-  const mergedData = mergeData(data, frontmatterData)
+  // Load data from "@dataFiles" directive
+  let dataFilesData: Record<string, unknown> = {}
+  if (dataFiles.length > 0) {
+    for (const dataFile of dataFiles) {
+      try {
+        // Resolve path: absolute (from basedir) or relative (from input file)
+        let dataFilePath: string
+        if (dataFile.startsWith('/')) {
+          // Absolute path from basedir
+          if (options.basedir) {
+            dataFilePath = resolve(options.basedir, dataFile.slice(1))
+          } else {
+            console.error(
+              `Error: Absolute path "${dataFile}" requires basedir option (-b, --basedir)`,
+            )
+            process.exit(1)
+          }
+        } else {
+          // Relative path from input file
+          const inputDir = dirname(resolve(process.cwd(), input))
+          dataFilePath = resolve(inputDir, dataFile)
+        }
+
+        const fileData = JSON.parse(readFileSync(dataFilePath, 'utf-8'))
+        dataFilesData = mergeData(dataFilesData, fileData)
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        console.error(`Error loading data file "${dataFile}":`, errorMessage)
+        process.exit(1)
+      }
+    }
+  }
+
+  // Merge data: CLI -O → @dataFiles → frontmatter direct
+  const mergedData = mergeData(data, dataFilesData, frontmatterData)
 
   const transformOptions: TransformOptions = {
     filename: input,
