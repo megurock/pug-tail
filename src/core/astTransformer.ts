@@ -13,6 +13,7 @@ import {
   createAttributesCode,
   extractAttributes,
   findSingleRootElement,
+  hasAnyAttributeBlocks,
   hasMultipleRoots,
 } from '@/utils/attributes'
 import {
@@ -391,12 +392,14 @@ export class ASTTransformer {
   /**
    * Injects attributes into the component body.
    *
-   * Phase 2 implementation:
+   * Phase 2.5 implementation:
    * 1. Inserts a Code node at the beginning of the component body to make
    *    the attributes object available.
-   * 2. Automatically adds &attributes to the single root element for
+   * 2. Checks if developer has manually written &attributes anywhere in the component.
+   *    If found, respects manual control and skips automatic fallthrough.
+   * 3. Otherwise, automatically adds &attributes to the single root element for
    *    attribute fallthrough.
-   * 3. Warns if there are multiple root elements (fallthrough disabled).
+   * 4. Warns if there are multiple root elements (fallthrough disabled).
    *
    * @param componentBody - The component body Block (already cloned)
    * @param attributes - Map of attribute names to JavaScript expression values
@@ -411,7 +414,14 @@ export class ASTTransformer {
     const attributesCode = createAttributesCode(attributes)
     componentBody.nodes.unshift(attributesCode)
 
-    // 2. Handle attribute fallthrough
+    // 2. Check if developer has manually written &attributes anywhere
+    if (hasAnyAttributeBlocks(componentBody)) {
+      // Developer has manually controlled attributes, respect their choice
+      // Do not add automatic fallthrough
+      return
+    }
+
+    // 3. Handle automatic attribute fallthrough
     const singleRoot = findSingleRootElement(componentBody)
 
     if (singleRoot) {

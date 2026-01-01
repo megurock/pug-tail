@@ -1,0 +1,8 @@
+component Button()
+  - const { size, ...attrs } = attributes
+  .btn-wrapper
+    button.btn&attributes(attrs)
+      slot
+
+Button(size="large", class="primary btn-large", data-test="btn-1")
+  | Click Me

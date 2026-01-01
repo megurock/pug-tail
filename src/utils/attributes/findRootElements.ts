@@ -4,6 +4,7 @@
  * @module utils/attributes/findRootElements
  */
 
+import walk from 'pug-walk'
 import type { Block, Node, Tag } from '@/types/pug'
 
 /**
@@ -105,4 +106,45 @@ export function hasSingleRoot(componentBody: Block): boolean {
  */
 export function hasMultipleRoots(componentBody: Block): boolean {
   return findRootElements(componentBody).length > 1
+}
+
+/**
+ * Checks if any element in the component body has explicit attribute blocks.
+ *
+ * This function recursively walks through the entire component AST to detect
+ * if the developer has manually written `&attributes` anywhere.
+ * If found, automatic attribute fallthrough should be disabled.
+ *
+ * @param componentBody - The Block node representing the component body
+ * @returns True if any element has `&attributes` or `&attributes(...)`
+ *
+ * @example
+ * ```pug
+ * component Input()
+ *   .wrapper
+ *     input.field&attributes(attributes)
+ * ```
+ * Returns: true (developer has manually controlled attributes)
+ *
+ * @example
+ * ```pug
+ * component Card()
+ *   .card
+ *     h2 Title
+ * ```
+ * Returns: false (no manual attribute blocks, auto fallthrough can be applied)
+ */
+export function hasAnyAttributeBlocks(componentBody: Block): boolean {
+  let found = false
+
+  walk(componentBody, (node: Node) => {
+    if (node.type === 'Tag') {
+      const tag = node as Tag
+      if (tag.attributeBlocks && tag.attributeBlocks.length > 0) {
+        found = true
+      }
+    }
+  })
+
+  return found
 }
