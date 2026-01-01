@@ -1,4 +1,60 @@
-# pug-tail ロードマップ
+### テスト結果 ✅
+
+**168件すべてパス**
+
+- Unit tests: ✅ すべてパス
+- Integration tests: ✅ すべてパス
+- Props/attrs分離: 8ケース ✅
+- Phase 2互換性: 維持 ✅
+- Phase 2.5統合: 正常動作 ✅
+- キャッシング: 正常動作 ✅
+
+**追加したテストフィクスチャ:**
+- `tests/fixtures/props-attrs/basic-props-attrs.*` - 基本的なprops/attrs使用
+- `tests/fixtures/props-attrs/default-values.*` - デフォルト値
+- `tests/fixtures/props-attrs/rename.*` - リネーム（class: className）
+- `tests/fixtures/props-attrs/partial-props.*` - 一部のpropsのみ指定
+- `tests/fixtures/props-attrs/unexpected-attrs.*` - 想定外の属性
+- `tests/fixtures/props-attrs/multiple-calls.*` - 同じComponentの複数呼び出し
+- `tests/fixtures/props-attrs/phase2-compatibility.*` - Phase 2互換
+- `tests/fixtures/props-attrs/phase25-integration.*` - Phase 2.5統合
+
+---#### 7. ブロックスコープによる変数衝突の回避 ✅
+
+**問題:**
+複数のComponent呼び出しで`var props`と`var attrs`が衝突する
+
+**解決策:**
+```pug
+component Card()
+  - const { title } = props
+  .card
+    h2= title
+
+Card(title="First")
+Card(title="Second")
+```
+
+生成されるコード:
+```javascript
+{
+  const props = { "title": "First" }
+  const attrs = {}
+  // ...
+}
+{
+  const props = { "title": "Second" }
+  const attrs = {}
+  // ...
+}
+```
+
+**特徴:**
+- 各Component展開をブロックスコープ`{}`でラップ
+- `const`を使用することでブロックスコープが有効になる
+- 複数呼び出しで変数が衝突しない
+
+---# pug-tail ロードマップ
 
 このドキュメントは、pug-tail の今後の開発計画と設計方針をまとめたロードマップです。
 本ロードマップでは **「attributes を props として再解釈する」** という設計思想を中核に据えています。
@@ -34,7 +90,7 @@ Card(title="Hello", count=5, class="my-card")
 
 ## 現在のステータス
 
-**Phase 2.5 完了** ✅
+**Phase 3 完了** ✅
 
 Phase 2 では attributes サポートを完全実装しました：
 - Component への attributes 渡し（型保持）
@@ -46,6 +102,13 @@ Phase 2 では attributes サポートを完全実装しました：
 Phase 2.5 では明示的な属性制御を実装しました：
 - 明示的な&attributes制御の検出
 - 制御構文（if/else, each, case/when）内でのslot展開
+
+Phase 3 では props/attrs 識別子を実装しました：
+- props/attrs 識別子の導入
+- 使用パターンによる自動判別（Babel統合）
+- JavaScript標準の分割代入でデフォルト値サポート
+- ブロックスコープ（const）による変数衝突の回避
+- Phase 2/2.5との完全互換性
 
 ---
 
@@ -357,7 +420,7 @@ merge: (...args: unknown[]) => {
 
 ---
 
-## Phase 3: props/attrs 識別子の導入（予定）
+## Phase 3: props/attrs 識別子の導入（✅ 完了）
 
 ### 目標
 
@@ -370,12 +433,13 @@ merge: (...args: unknown[]) => {
 2. **明確**: props と attrs の区別を明示的にする
 3. **ゼロランタイム**: ビルド時に完全展開
 4. **実用的**: 実際の問題を解決する
+5. **推論ベース**: 使用パターンから自動判別（定義不要）
 
 ---
 
-### 実装する機能
+### 実装された機能 ✅
 
-#### 1. props/attrs 識別子
+#### 1. props/attrs 識別子 ✅
 
 **基本的な使い方:**
 ```pug
@@ -417,7 +481,7 @@ const { class: className = "card" } = attrs
 
 ---
 
-#### 2. デフォルト値のサポート
+#### 2. デフォルト値のサポート ✅
 
 **JavaScript 標準の分割代入構文を使用:**
 ```pug
@@ -445,7 +509,7 @@ Button(label="Save", class="btn-success")
 
 ---
 
-#### 3. props/attrs の自動判別
+#### 3. props/attrs の自動判別 ✅
 
 **判別ロジック:**
 ```typescript
@@ -485,7 +549,7 @@ function detectAttributeUsage(componentBody: Block): {
 
 ---
 
-#### 4. Babel 統合による変数抽出
+#### 4. Babel 統合による変数抽出 ✅
 
 **実装方法:**
 ```typescript
@@ -529,7 +593,7 @@ function extractDestructuredVars(code: string): string[] {
 
 ---
 
-#### 5. Phase 2.5 との統合
+#### 5. Phase 2.5 との統合 ✅
 
 **Phase 2.5 の手動制御を尊重:**
 ```pug
@@ -554,7 +618,7 @@ Input(label="Name", placeholder="Enter name", type="text", class="input")
 
 ---
 
-#### 6. attributes との互換性
+#### 6. attributes との互換性 ✅
 
 **Phase 2 互換性を維持:**
 ```pug
@@ -649,44 +713,30 @@ component Card()
 
 ---
 
-### 必要な依存関係
+### 実際の工数 ✅
 
-```json
-{
-  "dependencies": {
-    "@babel/parser": "^7.23.0",
-    "@babel/traverse": "^7.23.0"
-  }
-}
-```
+**合計: 4日間**
 
----
+- Day 1: Babel統合（完了）
+  - `@babel/parser`と`@babel/traverse`のセットアップ
+  - `extractDestructuredVars()`の実装
+  - リネーム対応のテスト
 
-### 推定工数
-
-**合計: 3-4日**
-
-- Babel の統合（1日）
-  - `@babel/parser` と `@babel/traverse` のセットアップ
-  - `extractDestructuredVars()` の実装
-  - リネーム対応（`class: className`）
-
-- props/attrs 識別子の実装（1日）
-  - `detectAttributeUsage()` の実装
-  - `createPropsCode()` と `createAttrsCode()` の実装
+- Day 2: props/attrs識別子（完了）
+  - `detectAttributeUsage()`の実装
+  - `createPropsCode()`と`createAttrsCode()`の実装
   - Component本体への挿入ロジック
 
-- 自動判別とフォールスルー（1日）
-  - 分類ロジックの実装
-  - Phase 2.5との統合（手動制御の検出）
-  - attrs の自動フォールスルー
+- Day 3: 自動判別とフォールスルー（完了）
+  - `categorizeAttributes()`の実装
+  - キャッシング戦略の実装
+  - Phase 2.5との統合
+  - ブロックスコープ対応
 
-- テストとドキュメント（1日）
+- Day 4: テストとドキュメント（完了）
   - テストフィクスチャの作成
   - 統合テスト
-  - README.md の更新
-
-**Phase 3はシンプル版のため、当初予定の6-8日から3-4日に短縮**
+  - Phase 2互換性の確認
 
 ---
 
@@ -805,13 +855,15 @@ component Card()
 - 型安全性の向上（any型の排除）
 - 152件のテストすべてパス
 
-### v3.0.0 (Phase 3) - 予定
+### v3.0.0 (Phase 3) - 2025/01 ✅ 完了
 
 - props/attrs 識別子の導入
-- props/attrs 自動判別（Babel 統合）
-- JavaScript 標準の分割代入でデフォルト値サポート
-- Phase 2.5との統合（手動制御の尊重）
-- 推定工数: 3-4日
+- 使用パターンによる自動判別（Babel統合）
+- JavaScript標準の分割代入でデフォルト値サポート
+- ブロックスコープ（const）による変数衝突の回避
+- Phase 2/2.5との完全互換性
+- キャッシング機構の実装
+- 168件のテストすべてパス
 
 ---
 
