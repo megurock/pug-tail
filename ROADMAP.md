@@ -34,7 +34,7 @@ Card(title="Hello", count=5, class="my-card")
 
 ## 現在のステータス
 
-**Phase 2 (v2.0.0) 完了** ✅
+**Phase 2.5 完了** ✅
 
 Phase 2 では attributes サポートを完全実装しました：
 - Component への attributes 渡し（型保持）
@@ -42,6 +42,10 @@ Phase 2 では attributes サポートを完全実装しました：
 - 複数ルート要素の検出と Warning
 - class 属性の自動マージ
 - pug.merge 関数の実装
+
+Phase 2.5 では明示的な属性制御を実装しました：
+- 明示的な&attributes制御の検出
+- 制御構文（if/else, each, case/when）内でのslot展開
 
 ---
 
@@ -353,125 +357,295 @@ merge: (...args: unknown[]) => {
 
 ---
 
-## Phase 3: props 定義の導入（予定）
+## Phase 3: props/attrs 識別子の導入（予定）
 
 ### 目標
 
-`@props` 構文の導入と、props/attrs の自動判定を実装します。
+`props` と `attrs` 識別子を導入し、プロパティと属性を明確に分離します。
+シンプルで直感的な API を提供し、JavaScript 標準の機能のみを活用します。
 
-### 実装する機能
+### 設計原則
 
-#### 1. @props 構文
-
-```pug
-component Card()
-  @props {
-    title: { type: String, default: "Hello" },
-    count: { type: Number, default: 0 }
-  }
-  
-  .card
-    h2= title
-    p Count: #{count}
-```
-
-**ルール:**
-- `@props` に定義されたキー → props
-- それ以外 → attrs
-- default / required / type チェックをサポート
+1. **シンプル**: 新しい構文を導入しない（JavaScript 標準のみ）
+2. **明確**: props と attrs の区別を明示的にする
+3. **ゼロランタイム**: ビルド時に完全展開
+4. **実用的**: 実際の問題を解決する
 
 ---
 
-#### 2. props / attrs の自動判定
+### 実装する機能
 
-**実装方法:**
+#### 1. props/attrs 識別子
 
-Babel を使って Code ノードを解析:
+**基本的な使い方:**
+```pug
+component Card()
+  - const { title, count } = props
+  - const { class: className = "card" } = attrs
+  
+  .card(class=className)
+    h2= title
+    p Count: #{count}
 
+Card(title="Hello", count=5, class="my-card")
+```
+
+**内部処理:**
 ```typescript
-import { parse } from '@babel/parser'
-import traverse from '@babel/traverse'
+// Step 1: Component定義を事前解析
+const usage = detectAttributeUsage(componentBody)
+// → { fromProps: ['title', 'count'], fromAttrs: ['class'] }
 
-function detectAttributesUsage(codeVal: string): {
-  usedProps: string[]
-  hasRestSpread: boolean
-  restSpreadName?: string
+// Step 2: 呼び出し側の属性を分類
+const props = { title: "Hello", count: 5 }
+const attrs = { class: "my-card" }
+
+// Step 3: JavaScriptコードを生成（Phase 2と同じ方法）
+var props = { "title": "Hello", "count": 5 }
+var attrs = { "class": "my-card" }
+
+// ユーザーのコード（そのまま）
+const { title, count } = props
+const { class: className = "card" } = attrs
+```
+
+**特徴:**
+- ✅ props と attrs が明確に分離される
+- ✅ デフォルト値は JavaScript 標準の分割代入構文で設定
+- ✅ リネームも JavaScript 標準構文で可能
+- ✅ Vue 3 の概念と一致（学習コスト低）
+
+---
+
+#### 2. デフォルト値のサポート
+
+**JavaScript 標準の分割代入構文を使用:**
+```pug
+component Button()
+  - const { label, type = "button", disabled = false } = props
+  - const { class: className = "btn" } = attrs
+  
+  button(type=type disabled=disabled class=className)
+    = label
+
+// ケース1: すべて指定
+Button(label="Submit", type="submit", disabled=true, class="btn-primary")
+// → type="submit", disabled=true, class="btn-primary"
+
+// ケース2: 一部だけ指定
+Button(label="Cancel")
+// → type="button" (デフォルト), disabled=false (デフォルト), class="btn" (デフォルト)
+
+// ケース3: classだけカスタマイズ
+Button(label="Save", class="btn-success")
+// → type="button" (デフォルト), disabled=false (デフォルト), class="btn-success"
+```
+
+**重要:** デフォルト値は JavaScript エンジンが処理するため、特別な実装は不要です。
+
+---
+
+#### 3. props/attrs の自動判別
+
+**判別ロジック:**
+```typescript
+function detectAttributeUsage(componentBody: Block): {
+  fromProps: string[]
+  fromAttrs: string[]
 } {
-  const ast = parse(codeVal, {
-    sourceType: 'module',
-    plugins: ['jsx']
-  })
+  const fromProps: string[] = []
+  const fromAttrs: string[] = []
   
-  const usedProps: string[] = []
-  let hasRestSpread = false
-  let restSpreadName: string | undefined
-  
-  traverse.default(ast, {
-    VariableDeclarator(path) {
-      // 分割代入から変数を抽出
-      if (path.node.id.type === 'ObjectPattern') {
-        path.node.id.properties.forEach(prop => {
-          if (prop.type === 'ObjectProperty') {
-            usedProps.push(prop.key.name)
-          } else if (prop.type === 'RestElement') {
-            hasRestSpread = true
-            restSpreadName = prop.argument.name
-          }
-        })
+  walk(componentBody, (node) => {
+    if (node.type === 'Code') {
+      const code = node.val
+      
+      // "const { title, count } = props" を検出
+      if (code.includes('= props')) {
+        const vars = extractDestructuredVars(code)
+        fromProps.push(...vars)  // ['title', 'count']
       }
-    },
-    
-    MemberExpression(path) {
-      // attributes.title のような参照を検出
-      if (path.node.object.name === 'attributes') {
-        usedProps.push(path.node.property.name)
+      
+      // "const { class: className } = attrs" を検出
+      if (code.includes('= attrs')) {
+        const vars = extractDestructuredVars(code)
+        fromAttrs.push(...vars)  // ['class']
       }
     }
   })
   
-  return { usedProps, hasRestSpread, restSpreadName }
+  return { fromProps, fromAttrs }
 }
 ```
 
-**判定ロジック:**
+**分類ルール:**
+- `props` から取得されたプロパティ → **props**
+- `attrs` から取得されたプロパティ → **attrs**
+- どちらも指定されていない → **attrs**（デフォルト、自動フォールスルー）
+
+---
+
+#### 4. Babel 統合による変数抽出
+
+**実装方法:**
 ```typescript
-// Component 内のすべての Code ノードを解析
-const allUsedProps = new Set<string>()
+import { parse } from '@babel/parser'
+import traverse from '@babel/traverse'
 
-for (const node of componentBody.nodes) {
-  if (node.type === 'Code') {
-    const { usedProps } = detectAttributesUsage(node.val)
-    usedProps.forEach(prop => allUsedProps.add(prop))
-  }
+function extractDestructuredVars(code: string): string[] {
+  const ast = parse(code, {
+    sourceType: 'module',
+    plugins: ['typescript']
+  })
+  
+  const vars: string[] = []
+  
+  traverse.default(ast, {
+    VariableDeclarator(path) {
+      if (path.node.id.type === 'ObjectPattern') {
+        path.node.id.properties.forEach(prop => {
+          if (prop.type === 'ObjectProperty') {
+            // 元のキー名を記録（リネーム対応）
+            // const { class: className } → 'class' を記録
+            const keyName = prop.key.type === 'Identifier' 
+              ? prop.key.name 
+              : prop.key.value
+            vars.push(keyName)
+          }
+        })
+      }
+    }
+  })
+  
+  return vars
 }
+```
 
-// 呼び出し側の attributes と比較
-const props = {}
-const attrs = {}
+**対応する構文:**
+- ✅ 基本的な分割代入: `const { title } = props`
+- ✅ デフォルト値: `const { title = "Default" } = props`
+- ✅ リネーム: `const { class: className } = attrs`
+- ✅ 複合: `const { title = "Default", class: className = "card" } = props`
 
-for (const [key, value] of Object.entries(callAttrs)) {
-  if (allUsedProps.has(key)) {
-    props[key] = value  // props
-  } else {
-    attrs[key] = value  // attrs
-  }
+---
+
+#### 5. Phase 2.5 との統合
+
+**Phase 2.5 の手動制御を尊重:**
+```pug
+component Input()
+  - const { label, placeholder } = props
+  .wrapper
+    label= label
+    input.field&attributes(attrs)  // ← 明示的に制御（Phase 2.5）
+
+Input(label="Name", placeholder="Enter name", type="text", class="input")
+```
+
+**動作:**
+- `&attributes(attrs)` が明示的に書かれている → 手動制御（Phase 2.5）
+- 自動フォールスルーはスキップ
+- `input.field` に `type`, `class` だけが適用される
+
+**Phase 3 の改善点:**
+- `label`, `placeholder` は props として扱われる
+- `attrs` には `type`, `class` のみが含まれる
+- `&attributes(attrs)` に正しい値が渡される
+
+---
+
+#### 6. attributes との互換性
+
+**Phase 2 互換性を維持:**
+```pug
+component Card()
+  // Phase 2 スタイル（従来通り動作）
+  - const { title, count } = attributes
+  .card
+    h2= title
+    p Count: #{count}
+
+  // または Phase 3 スタイル（推奨）
+  - const { title, count } = props
+  - const { class } = attrs
+```
+
+**動作:**
+- `attributes` を使用した場合は Phase 2 と同じ動作
+- `props`/`attrs` を使用した場合は Phase 3 の動作
+- 両方とも正常に動作する
+
+---
+
+### 実装しない機能
+
+#### ❌ @props 構文
+
+**理由:**
+- 新しい構文を覚える必要がある
+- JavaScript 標準の分割代入で十分
+- 実装が複雑になる
+
+```pug
+// これは実装しない
+@props {
+  title: { type: String, default: "Hello" }
+}
+```
+
+**代わりに:**
+```pug
+// JavaScript 標準構文を使用
+- const { title = "Hello" } = props
+```
+
+---
+
+#### ❌ 型検証（type）
+
+**理由:**
+- pug-tail はビルド時に完全展開される（ゼロランタイム）
+- ランタイムで型チェックする必要がない
+- TypeScript を使えば型安全性は確保できる
+
+```pug
+// これは実装しない
+@props {
+  title: { type: String }  // ← ランタイム型チェック不要
 }
 ```
 
 ---
 
-#### 3. Scoped slot 対応
+#### ❌ 必須チェック（required）
 
-slot に名前付き props を渡せるようにします。
+**理由:**
+- ビルド時変換では必須チェックは意味がない
+- 呼び出し側で渡されていなければ `undefined` になるだけ
+- TypeScript の型システムで対応可能
 
 ```pug
-component List()
-  each item in attributes.items
-    slot(item, index=item.id)
-      li= item.name
+// これは実装しない
+@props {
+  title: { required: true }  // ← ビルド時変換には不要
+}
 ```
 
-**slot props は component → slot への出力**であり、component 呼び出しの引数とは無関係です。
+---
+
+#### ❌ カスタムバリデーション
+
+**理由:**
+- ビルド時変換では実行できない
+- ゼロランタイムの原則に反する
+
+---
+
+#### ⏸️ Scoped slot（Phase 3.5 以降に延期）
+
+**理由:**
+- 仕様の詳細化が必要
+- Phase 3 の実装を完了させてから検討
 
 ---
 
@@ -490,13 +664,29 @@ component List()
 
 ### 推定工数
 
-**合計: 6-8日**
+**合計: 3-4日**
 
-- Babel の統合（2日）
-- @props 構文の実装（2日）
-- props/attrs 自動判定（2日）
-- Scoped slot（2-3日）
-- ドキュメント・テスト（1日）
+- Babel の統合（1日）
+  - `@babel/parser` と `@babel/traverse` のセットアップ
+  - `extractDestructuredVars()` の実装
+  - リネーム対応（`class: className`）
+
+- props/attrs 識別子の実装（1日）
+  - `detectAttributeUsage()` の実装
+  - `createPropsCode()` と `createAttrsCode()` の実装
+  - Component本体への挿入ロジック
+
+- 自動判別とフォールスルー（1日）
+  - 分類ロジックの実装
+  - Phase 2.5との統合（手動制御の検出）
+  - attrs の自動フォールスルー
+
+- テストとドキュメント（1日）
+  - テストフィクスチャの作成
+  - 統合テスト
+  - README.md の更新
+
+**Phase 3はシンプル版のため、当初予定の6-8日から3-4日に短縮**
 
 ---
 
@@ -553,7 +743,7 @@ component Card()
 
 **解決策:**
 - ベストエフォート（検出可能なものだけ）
-- 明示的な `@props` 定義を推奨
+- 明示的な `props`/`attrs` からの分割代入を推奨
 
 ---
 
@@ -578,9 +768,10 @@ component Card()
 **Phase 3:**
 ```pug
 component Card()
-  @props { title, count }
+  - const { title, count } = props
+  - const { class: className } = attrs
   
-  .card
+  .card(class=className)
     h2= title
 ```
 
@@ -606,12 +797,21 @@ component Card()
 - var によるスコープ問題の回避
 - 140件のテストすべてパス
 
+### v2.5.0 (Phase 2.5) - 2025/01 ✅ 完了
+
+- 明示的な&attributes制御のサポート
+- hasAnyAttributeBlocks()関数の追加
+- 制御構文（Conditional, Each, Case）内でのslot展開
+- 型安全性の向上（any型の排除）
+- 152件のテストすべてパス
+
 ### v3.0.0 (Phase 3) - 予定
 
-- @props 構文
-- props/attrs 自動判定（Babel 統合）
-- Scoped slot
-- 推定工数: 6-8日
+- props/attrs 識別子の導入
+- props/attrs 自動判別（Babel 統合）
+- JavaScript 標準の分割代入でデフォルト値サポート
+- Phase 2.5との統合（手動制御の尊重）
+- 推定工数: 3-4日
 
 ---
 
