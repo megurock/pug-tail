@@ -5,26 +5,36 @@
  * An interface for using pug-tail from the command line.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { FileProcessor } from './cli/fileProcessor.js'
 import { type TransformOptions, transform } from './transform.js'
 
 /**
  * CLI options.
  */
 interface CLIOptions {
-  /** Input file. */
-  input?: string
+  /** Input files/directories/patterns. */
+  inputs: string[]
 
-  /** Output file. */
+  /** Output directory or file. */
   output?: string
 
   /** Output format. */
   format?: 'html' | 'ast' | 'pug-code'
 
+  /** Output file extension. */
+  extension?: string
+
+  /** Pretty print HTML. */
+  pretty?: boolean
+
   /** Enable debug output. */
   debug?: boolean
+
+  /** Silent mode (no log output). */
+  silent?: boolean
 
   /** Show help. */
   help?: boolean
@@ -41,20 +51,44 @@ function showHelp(): void {
 pug-tail - A transpiler that statically expands component DSL with slot syntax on Pug AST
 
 Usage:
-  pug-tail [options] <input-file>
+  pug-tail [options] [files...]
+
+Arguments:
+  files...                    Input files, directories, or glob patterns
 
 Options:
-  -o, --output <file>    Output file path (default: stdout)
-  -f, --format <format>  Output format: html, ast, pug-code (default: html)
-  -d, --debug            Enable debug output
-  -h, --help             Show this help message
-  -v, --version          Show version number
+  Output:
+    -o, --out <dir>           Output directory (or file for single input)
+    -E, --extension <ext>     Output file extension (default: .html)
+
+  Formatting:
+    -P, --pretty              Pretty print HTML output
+    -f, --format <format>     Output format: html, ast, pug-code (default: html)
+
+  Other:
+    -d, --debug               Enable debug output
+    -s, --silent              Silent mode (no log output)
+    -h, --help                Show this help message
+    -v, --version             Show version number
 
 Examples:
-  pug-tail input.pug -o output.html
-  pug-tail input.pug -f html -o output.html
-  pug-tail input.pug -f ast -o output.json
-  pug-tail input.pug --debug
+  # Single file
+  pug-tail src/index.pug -o dist/
+
+  # Multiple files
+  pug-tail src/index.pug src/about.pug -o dist/
+
+  # Glob pattern
+  pug-tail "src/**/*.pug" -o dist/
+
+  # Directory (recursive)
+  pug-tail src/ -o dist/
+
+  # Pretty print
+  pug-tail src/ -o dist/ -P
+
+  # Debug mode
+  pug-tail src/ -o dist/ -d
 
 For more information, visit: https://github.com/megurock/pug-tail
 `)
@@ -64,7 +98,6 @@ For more information, visit: https://github.com/megurock/pug-tail
  * Displays the version number.
  */
 function showVersion(): void {
-  // Read the version from package.json.
   try {
     const packagePath = resolve(
       fileURLToPath(import.meta.url),
@@ -84,7 +117,9 @@ function showVersion(): void {
  * @returns The parsed options.
  */
 function parseArgs(args: string[]): CLIOptions {
-  const options: CLIOptions = {}
+  const options: CLIOptions = {
+    inputs: [],
+  }
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -95,13 +130,26 @@ function parseArgs(args: string[]): CLIOptions {
       options.version = true
     } else if (arg === '-d' || arg === '--debug') {
       options.debug = true
-    } else if (arg === '-o' || arg === '--output') {
+    } else if (arg === '-s' || arg === '--silent') {
+      options.silent = true
+    } else if (arg === '-P' || arg === '--pretty') {
+      options.pretty = true
+    } else if (arg === '-o' || arg === '--out' || arg === '--output') {
       const next = args[i + 1]
       if (!next || next.startsWith('-')) {
-        console.error('Error: --output requires a file path')
+        console.error('Error: --out requires a path')
         process.exit(1)
       }
       options.output = next
+      i++
+    } else if (arg === '-E' || arg === '--extension') {
+      const next = args[i + 1]
+      if (!next || next.startsWith('-')) {
+        console.error('Error: --extension requires an extension')
+        process.exit(1)
+      }
+      // Add leading dot if not present
+      options.extension = next.startsWith('.') ? next : `.${next}`
       i++
     } else if (arg === '-f' || arg === '--format') {
       const next = args[i + 1]
@@ -116,12 +164,8 @@ function parseArgs(args: string[]): CLIOptions {
       options.format = next
       i++
     } else if (arg && !arg.startsWith('-')) {
-      // Input file.
-      if (options.input) {
-        console.error('Error: Multiple input files are not supported')
-        process.exit(1)
-      }
-      options.input = arg
+      // Input file/directory/pattern
+      options.inputs.push(arg)
     }
   }
 
@@ -129,9 +173,198 @@ function parseArgs(args: string[]): CLIOptions {
 }
 
 /**
+ * Checks if we should use single-file mode.
+ *
+ * Single-file mode is used when:
+ * - There is exactly one input
+ * - The input is a file (not a directory or pattern)
+ * - The output is specified and is not a directory
+ *
+ * @param options - CLI options
+ * @returns True if single-file mode should be used
+ */
+function useSingleFileMode(options: CLIOptions): boolean {
+  if (options.inputs.length !== 1) return false
+
+  const input = options.inputs[0]
+  if (!input) return false // Guard against undefined
+
+  // Check if input contains glob characters
+  if (input.includes('*') || input.includes('?') || input.includes('[')) {
+    return false
+  }
+
+  // Check if input is a file
+  try {
+    const inputPath = resolve(process.cwd(), input)
+    const stat = statSync(inputPath)
+    if (!stat.isFile()) return false
+  } catch {
+    return false
+  }
+
+  // Check if output is specified and is not a directory
+  if (options.output) {
+    // If output ends with /, treat it as a directory
+    if (options.output.endsWith('/') || options.output.endsWith('\\')) {
+      return false
+    }
+
+    try {
+      const outputPath = resolve(process.cwd(), options.output)
+      const stat = statSync(outputPath)
+      if (stat.isDirectory()) return false
+    } catch {
+      // Output doesn't exist yet
+      // If it has an extension (.html, .htm, etc.), treat as file
+      if (/\.\w+$/.test(options.output)) {
+        return true
+      }
+      // No extension = treat as directory
+      return false
+    }
+  }
+
+  // No output specified, use stdout
+  return true
+}
+
+/**
+ * Processes files using the single-file mode (backward compatible).
+ *
+ * @param options - CLI options
+ */
+function processSingleFile(options: CLIOptions): void {
+  const input = options.inputs[0]
+  if (!input) {
+    console.error('Error: No input file specified')
+    process.exit(1)
+  }
+
+  let source: string
+  try {
+    const inputPath = resolve(process.cwd(), input)
+    source = readFileSync(inputPath, 'utf-8')
+  } catch (error) {
+    console.error(
+      `Error: Failed to read input file "${input}": ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    )
+    process.exit(1)
+  }
+
+  const transformOptions: TransformOptions = {
+    filename: input,
+    debug: options.debug ?? false,
+    output: options.format ?? 'html',
+    htmlOptions: {
+      pretty: options.pretty ?? false,
+      compileDebug: false,
+    },
+  }
+
+  try {
+    const result = transform(source, transformOptions)
+
+    let output: string
+    if (options.format === 'ast') {
+      if (!result.ast) {
+        console.error('Error: AST output is not available')
+        process.exit(1)
+      }
+      output = JSON.stringify(result.ast, null, 2)
+    } else if (options.format === 'pug-code') {
+      output = result.code ?? ''
+    } else {
+      if (!result.html) {
+        console.error('Error: HTML output is not available')
+        process.exit(1)
+      }
+      output = result.html
+    }
+
+    if (options.output) {
+      try {
+        const outputPath = resolve(process.cwd(), options.output)
+
+        // Create output directory if it doesn't exist
+        const outputDir = dirname(outputPath)
+        mkdirSync(outputDir, { recursive: true })
+
+        writeFileSync(outputPath, output, 'utf-8')
+        if (options.debug) {
+          console.log(`[pug-tail] Output written to: ${outputPath}`)
+        }
+      } catch (error) {
+        console.error(
+          `Error: Failed to write output file "${options.output}": ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        )
+        process.exit(1)
+      }
+    } else {
+      console.log(output)
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`Error: ${error.message}`)
+      if (error.stack && options.debug) {
+        console.error(error.stack)
+      }
+    } else {
+      console.error(`Error: ${String(error)}`)
+    }
+    process.exit(1)
+  }
+}
+
+/**
+ * Processes files using the multi-file mode.
+ *
+ * @param options - CLI options
+ */
+async function processMultipleFiles(options: CLIOptions): Promise<void> {
+  const processor = new FileProcessor({
+    outputDir: options.output,
+    extension: options.extension,
+    transformOptions: {
+      debug: options.debug ?? false,
+      output: options.format ?? 'html',
+      htmlOptions: {
+        pretty: options.pretty ?? false,
+        compileDebug: false,
+      },
+    },
+    silent: options.silent,
+    debug: options.debug,
+  })
+
+  const results = await processor.processInputs(options.inputs)
+
+  // Count successes and failures
+  const successful = results.filter((r) => r.success).length
+  const failed = results.filter((r) => !r.success).length
+
+  if (!options.silent && results.length > 0) {
+    console.log()
+    console.log(`Processed ${successful} file(s) successfully`)
+    if (failed > 0) {
+      console.log(`Failed to process ${failed} file(s)`)
+    }
+  }
+
+  // Exit with error code if any files failed
+  if (failed > 0) {
+    process.exit(1)
+  }
+}
+
+/**
  * The main process.
  */
-function main(): void {
+async function main(): Promise<void> {
   const args = process.argv.slice(2)
 
   if (args.length === 0) {
@@ -151,96 +384,24 @@ function main(): void {
     process.exit(0)
   }
 
-  if (!options.input) {
-    console.error('Error: Input file is required')
+  if (options.inputs.length === 0) {
+    console.error('Error: No input files specified')
     console.error('Use --help for usage information')
     process.exit(1)
   }
 
-  // Read the input file.
-  let source: string
-  try {
-    const inputPath = resolve(process.cwd(), options.input)
-    source = readFileSync(inputPath, 'utf-8')
-  } catch (error) {
-    console.error(
-      `Error: Failed to read input file "${options.input}": ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    )
-    process.exit(1)
-  }
-
-  // Transformation options.
-  const transformOptions: TransformOptions = {
-    filename: options.input,
-    debug: options.debug ?? false,
-    output: options.format ?? 'html',
-    htmlOptions: {
-      pretty: true,
-      compileDebug: false,
-    },
-  }
-
-  // Execute the transformation.
-  try {
-    const result = transform(source, transformOptions)
-
-    // Output.
-    let output: string
-    if (options.format === 'ast') {
-      // If the format is AST, output in JSON format.
-      if (!result.ast) {
-        console.error('Error: AST output is not available')
-        process.exit(1)
-      }
-      output = JSON.stringify(result.ast, null, 2)
-    } else if (options.format === 'pug-code') {
-      output = result.code ?? ''
-    } else {
-      // If the format is HTML, output as is (default).
-      if (!result.html) {
-        console.error('Error: HTML output is not available')
-        process.exit(1)
-      }
-      output = result.html
-    }
-
-    if (options.output) {
-      // Output to a file.
-      try {
-        const outputPath = resolve(process.cwd(), options.output)
-        writeFileSync(outputPath, output, 'utf-8')
-        if (options.debug) {
-          console.log(`[pug-tail] Output written to: ${outputPath}`)
-        }
-      } catch (error) {
-        console.error(
-          `Error: Failed to write output file "${options.output}": ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        )
-        process.exit(1)
-      }
-    } else {
-      // Output to stdout.
-      console.log(output)
-    }
-  } catch (error) {
-    // Display the error.
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`)
-      if (error.stack && options.debug) {
-        console.error(error.stack)
-      }
-    } else {
-      console.error(`Error: ${String(error)}`)
-    }
-    process.exit(1)
+  // Determine mode and process
+  if (useSingleFileMode(options)) {
+    processSingleFile(options)
+  } else {
+    await processMultipleFiles(options)
   }
 }
 
 // Run main only when executed as a CLI.
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main()
+  main().catch((error) => {
+    console.error('Fatal error:', error)
+    process.exit(1)
+  })
 }

@@ -1,0 +1,397 @@
+/**
+ * File processor for handling multiple files and directories.
+ *
+ * @module cli/fileProcessor
+ */
+
+import {
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs'
+import { resolve } from 'node:path'
+import { glob } from 'glob'
+import type { TransformOptions } from '../transform.js'
+import { transform } from '../transform.js'
+import {
+  getDirectory,
+  isPugFile,
+  type PathResolverOptions,
+  resolveAbsolutePath,
+  resolveOutputPath,
+  shouldIgnoreFile,
+} from './pathResolver.js'
+
+/**
+ * Options for file processing.
+ */
+export interface FileProcessorOptions {
+  /** Output directory */
+  outputDir?: string
+  /** Output file extension */
+  extension?: string
+  /** Transform options */
+  transformOptions?: Omit<TransformOptions, 'filename'>
+  /** Silent mode (no log output) */
+  silent?: boolean
+  /** Debug mode (detailed log output) */
+  debug?: boolean
+}
+
+/**
+ * Result of file processing.
+ */
+export interface ProcessResult {
+  /** Input file path */
+  input: string
+  /** Output file path */
+  output: string
+  /** Whether the file was successfully processed */
+  success: boolean
+  /** Error message if failed */
+  error?: string
+}
+
+/**
+ * File processor for handling multiple files and directories.
+ *
+ * @example
+ * ```typescript
+ * const processor = new FileProcessor({
+ *   outputDir: 'dist',
+ *   extension: '.html',
+ *   transformOptions: {
+ *     output: 'html',
+ *     htmlOptions: { pretty: true }
+ *   }
+ * })
+ *
+ * // Process single file
+ * await processor.processFile('src/index.pug')
+ *
+ * // Process multiple files
+ * await processor.processFiles(['src/index.pug', 'src/about.pug'])
+ *
+ * // Process with glob pattern
+ * await processor.processPattern('src/**\/*.pug')
+ *
+ * // Process directory
+ * await processor.processDirectory('src')
+ * ```
+ */
+export class FileProcessor {
+  private options: FileProcessorOptions
+  private rootPath?: string
+
+  constructor(options: FileProcessorOptions = {}) {
+    this.options = options
+  }
+
+  /**
+   * Processes a single file.
+   *
+   * @param inputPath - Path to the input file (can be relative)
+   * @param rootPath - Optional root path for maintaining directory structure
+   * @returns Process result
+   */
+  async processFile(
+    inputPath: string,
+    rootPath?: string,
+  ): Promise<ProcessResult> {
+    const absoluteInput = resolveAbsolutePath(inputPath)
+
+    try {
+      // Check if file should be ignored
+      if (shouldIgnoreFile(absoluteInput)) {
+        if (this.options.debug) {
+          this.log(`Ignored: ${inputPath}`)
+        }
+        return {
+          input: inputPath,
+          output: '',
+          success: true, // Not an error, just ignored
+        }
+      }
+
+      // Check if file is a Pug file
+      if (!isPugFile(absoluteInput)) {
+        return {
+          input: inputPath,
+          output: '',
+          success: false,
+          error: 'Not a Pug file',
+        }
+      }
+
+      // Read input file
+      const source = readFileSync(absoluteInput, 'utf-8')
+
+      // Resolve output path
+      const pathOptions: PathResolverOptions = {
+        outputDir: this.options.outputDir,
+        extension: this.options.extension,
+        rootPath: rootPath || this.rootPath,
+      }
+      const outputPath = resolveOutputPath(absoluteInput, pathOptions)
+
+      // Transform
+      const result = transform(source, {
+        filename: absoluteInput,
+        ...this.options.transformOptions,
+      })
+
+      // Get output content
+      let output: string
+      if (this.options.transformOptions?.output === 'ast') {
+        if (!result.ast) {
+          throw new Error('AST output is not available')
+        }
+        output = JSON.stringify(result.ast, null, 2)
+      } else if (this.options.transformOptions?.output === 'pug-code') {
+        if (!result.code) {
+          throw new Error('Pug code output is not available')
+        }
+        output = result.code
+      } else {
+        if (!result.html) {
+          throw new Error('HTML output is not available')
+        }
+        output = result.html
+      }
+
+      // Create output directory
+      const outputDir = getDirectory(outputPath)
+      mkdirSync(outputDir, { recursive: true })
+
+      // Write output file
+      writeFileSync(outputPath, output, 'utf-8')
+
+      // Log success
+      if (!this.options.silent) {
+        this.log(`  rendered ${outputPath}`)
+      }
+
+      return {
+        input: inputPath,
+        output: outputPath,
+        success: true,
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+
+      if (!this.options.silent) {
+        console.error(`Error processing ${inputPath}:`, errorMessage)
+      }
+
+      return {
+        input: inputPath,
+        output: '',
+        success: false,
+        error: errorMessage,
+      }
+    }
+  }
+
+  /**
+   * Processes multiple files.
+   *
+   * @param inputPaths - Array of input file paths
+   * @param rootPath - Optional root path for maintaining directory structure
+   * @returns Array of process results
+   */
+  async processFiles(
+    inputPaths: string[],
+    rootPath?: string,
+  ): Promise<ProcessResult[]> {
+    const results: ProcessResult[] = []
+
+    for (const inputPath of inputPaths) {
+      const result = await this.processFile(inputPath, rootPath)
+      results.push(result)
+    }
+
+    return results
+  }
+
+  /**
+   * Processes files matching a glob pattern.
+   *
+   * @param pattern - Glob pattern (e.g., 'src/**\/*.pug')
+   * @param rootPath - Optional root path for maintaining directory structure
+   * @returns Array of process results
+   *
+   * @example
+   * ```typescript
+   * // Process all .pug files in src directory
+   * await processor.processPattern('src/**\/*.pug')
+   *
+   * // Process specific files
+   * await processor.processPattern('src/{index,about}.pug')
+   * ```
+   */
+  async processPattern(
+    pattern: string,
+    rootPath?: string,
+  ): Promise<ProcessResult[]> {
+    // Find files matching the pattern
+    const files = await glob(pattern, {
+      ignore: ['node_modules/**', '.git/**'],
+      nodir: true,
+      absolute: true,
+    })
+
+    if (files.length === 0) {
+      if (!this.options.silent) {
+        console.warn(`No files found matching pattern: ${pattern}`)
+      }
+      return []
+    }
+
+    if (this.options.debug) {
+      this.log(`Found ${files.length} files matching pattern: ${pattern}`)
+    }
+
+    // Process all files
+    return this.processFiles(files, rootPath)
+  }
+
+  /**
+   * Processes a directory recursively.
+   *
+   * @param dirPath - Path to the directory
+   * @returns Array of process results
+   *
+   * @example
+   * ```typescript
+   * // Process all .pug files in src directory recursively
+   * await processor.processDirectory('src')
+   * ```
+   */
+  async processDirectory(dirPath: string): Promise<ProcessResult[]> {
+    const absoluteDir = resolveAbsolutePath(dirPath)
+    const results: ProcessResult[] = []
+
+    try {
+      const stat = lstatSync(absoluteDir)
+
+      if (!stat.isDirectory()) {
+        // If it's a file, process it
+        return [await this.processFile(absoluteDir)]
+      }
+
+      // Read directory contents
+      const entries = readdirSync(absoluteDir)
+
+      for (const entry of entries) {
+        const entryPath = resolve(absoluteDir, entry)
+        const entryStat = lstatSync(entryPath)
+
+        if (entryStat.isDirectory()) {
+          // Recursively process subdirectory
+          const subResults = await this.processDirectory(entryPath)
+          results.push(...subResults)
+        } else if (entryStat.isFile()) {
+          // Process file
+          const result = await this.processFile(entryPath, absoluteDir)
+          results.push(result)
+        }
+      }
+
+      return results
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+
+      if (!this.options.silent) {
+        console.error(`Error processing directory ${dirPath}:`, errorMessage)
+      }
+
+      return []
+    }
+  }
+
+  /**
+   * Processes input paths (files, directories, or glob patterns).
+   *
+   * This is the main entry point for processing multiple inputs.
+   *
+   * @param inputs - Array of input paths (files, directories, or glob patterns)
+   * @returns Array of process results
+   *
+   * @example
+   * ```typescript
+   * // Mix of files, directories, and patterns
+   * await processor.processInputs([
+   *   'src/index.pug',
+   *   'src/pages/',
+   *   'src/blog/**\/*.pug'
+   * ])
+   * ```
+   */
+  async processInputs(inputs: string[]): Promise<ProcessResult[]> {
+    const results: ProcessResult[] = []
+
+    for (const input of inputs) {
+      const absolutePath = resolveAbsolutePath(input)
+
+      try {
+        // Check if it's a glob pattern
+        if (input.includes('*') || input.includes('?') || input.includes('[')) {
+          const patternResults = await this.processPattern(input)
+          results.push(...patternResults)
+          continue
+        }
+
+        // Check if it's a file or directory
+        const stat = lstatSync(absolutePath)
+
+        if (stat.isFile()) {
+          const result = await this.processFile(absolutePath)
+          results.push(result)
+        } else if (stat.isDirectory()) {
+          const dirResults = await this.processDirectory(absolutePath)
+          results.push(...dirResults)
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+
+        if (!this.options.silent) {
+          console.error(`Error processing ${input}:`, errorMessage)
+        }
+
+        results.push({
+          input,
+          output: '',
+          success: false,
+          error: errorMessage,
+        })
+      }
+    }
+
+    return results
+  }
+
+  /**
+   * Sets the root path for maintaining directory structure.
+   *
+   * @param rootPath - The root path
+   */
+  setRootPath(rootPath: string): void {
+    this.rootPath = resolveAbsolutePath(rootPath)
+  }
+
+  /**
+   * Logs a message (respects silent mode).
+   *
+   * @param message - The message to log
+   */
+  private log(message: string): void {
+    if (!this.options.silent) {
+      console.log(message)
+    }
+  }
+}
