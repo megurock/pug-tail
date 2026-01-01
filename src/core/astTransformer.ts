@@ -6,7 +6,16 @@
 
 import walk from 'pug-walk'
 import type { NodeLocation, SlotDefinition } from '@/types'
-import type { Block, Extends, Include, Node, Tag } from '@/types/pug'
+import type {
+  Block,
+  Case,
+  Conditional,
+  Each,
+  Extends,
+  Include,
+  Node,
+  Tag,
+} from '@/types/pug'
 import { getNodeLocationObject, isCapitalizedTag } from '@/utils/astHelpers'
 import {
   addAttributeFallthrough,
@@ -333,6 +342,30 @@ export class ASTTransformer {
           traverse(node.block)
         } else if (node.type === 'Block') {
           traverse(node)
+        } else if (node.type === 'Conditional') {
+          // Handle if/else: traverse both consequent and alternate
+          const conditional = node as Conditional
+          if (conditional.consequent) {
+            traverse(conditional.consequent)
+          }
+          if (conditional.alternate) {
+            traverse(conditional.alternate)
+          }
+        } else if (node.type === 'Each') {
+          // Handle each loops: traverse block and alternate
+          const each = node as Each
+          if (each.block) {
+            traverse(each.block)
+          }
+          if (each.alternate) {
+            traverse(each.alternate)
+          }
+        } else if (node.type === 'Case') {
+          // Handle case/when: traverse block
+          const caseNode = node as Case
+          if (caseNode.block) {
+            traverse(caseNode.block)
+          }
         }
       }
     }

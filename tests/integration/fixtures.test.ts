@@ -358,6 +358,52 @@ describe('transform with fixtures', () => {
       // Attributes are not passed to root elements (fallthrough disabled)
       expect(result.html).not.toContain('my-layout')
     })
+
+    test('should handle slot in conditional (if/else)', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'edge-cases',
+        'conditional-slot',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify that slot is correctly expanded in conditional
+      expect(result.html).toContain('<button class="btn-primary">')
+      expect(result.html).toContain('Click Me')
+      expect(result.html).not.toContain('<slot>')
+      expect(result.html).not.toContain('</slot>')
+    })
+
+    test('should handle each loop in component', () => {
+      const { pug, html: expectedHtml } = loadFixture('edge-cases', 'each-loop')
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify that each loop correctly iterates and renders items
+      expect(result.html).toContain('<ul')
+      expect(result.html).toContain('<li>Apple</li>')
+      expect(result.html).toContain('<li>Banana</li>')
+      expect(result.html).toContain('<li>Cherry</li>')
+      // Should have 3 list items (one for each item in array)
+      const matches = result.html?.match(/<li>[^<]+<\/li>/g)
+      expect(matches).toHaveLength(3)
+    })
   })
 
   describe('include', () => {
