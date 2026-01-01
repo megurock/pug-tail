@@ -2,7 +2,7 @@
  * Tests for the integrated transform function.
  */
 
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { transform } from '@/transform'
 
 describe('transform', () => {
@@ -139,12 +139,22 @@ Card()
     h1 Title
 `
 
-    // Verify that no errors occur in debug mode.
-    const result = transform(source, {
-      output: 'html',
-      debug: true,
-    })
+    // Mock console.log to suppress debug output during tests
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    expect(result.html).toBeDefined()
+    try {
+      // Verify that no errors occur in debug mode.
+      const result = transform(source, {
+        output: 'html',
+        debug: true,
+      })
+
+      expect(result.html).toBeDefined()
+      // Verify that debug output was called
+      expect(consoleLogSpy).toHaveBeenCalled()
+    } finally {
+      // Restore console.log
+      consoleLogSpy.mockRestore()
+    }
   })
 })

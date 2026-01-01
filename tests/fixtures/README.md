@@ -1,20 +1,40 @@
-# テストフィクスチャ
+# Test Fixtures
 
-このディレクトリには、テストで使用するPugファイルと期待される出力（HTML）が含まれています。
+This directory contains test fixtures organized by feature/functionality.
 
-## ディレクトリ構成
+## Directory Structure
 
-- **`simple/`** - シンプルなコンポーネントとスロットの基本的なケース
-- **`slots/`** - スロット機能に関するテストケース（複数スロット、デフォルトスロットなど）
-- **`nested/`** - ネストされたコンポーネントのテストケース
-- **`complex/`** - 複雑なシナリオや複数のコンポーネントが組み合わさったケース
-- **`edge-cases/`** - エッジケースや特殊な状況のテストケース
+```
+fixtures/
+├── components/         # Basic component transformation
+├── slots/             # Slot system (named, default, nested)
+├── attributes/        # Attribute handling (Phase 2)
+├── props-attrs/       # Props/attrs separation (Phase 3)
+├── nested/            # Nested component calls
+├── complex/           # Complex multi-component structures
+├── edge-cases/        # Edge cases and unusual scenarios
+└── include/           # Include and extends functionality
+```
 
-## ファイル命名規則
+## Fixture Format
 
-各テストケースは `.pug` ファイルと対応する `.html` ファイル（期待される出力）のペアで構成されます。
+Each fixture consists of:
+- `*.pug` - Input Pug template
+- `*.html` - Expected HTML output
 
-例：
-- `simple-component.pug` - 入力Pugファイル
-- `simple-component.html` - 期待されるHTML出力
+## Adding New Fixtures
 
+1. Choose the appropriate directory based on the feature being tested
+2. Create both `.pug` and `.html` files with the same base name
+3. Add corresponding test cases in `tests/integration/`
+
+## Test Organization
+
+Integration tests are organized by feature:
+- `components.test.ts` - Basic component transformation
+- `slots.test.ts` - Slot system
+- `attributes.test.ts` - Attribute handling (Phase 2)
+- `props-attrs.test.ts` - Props/attrs separation (Phase 3)
+- `nested-components.test.ts` - Nested components
+- `edge-cases.test.ts` - Edge cases
+- `include.test.ts` - Include and extends

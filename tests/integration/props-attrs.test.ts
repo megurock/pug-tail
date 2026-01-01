@@ -6,7 +6,7 @@ describe('Phase 3: props/attrs identifiers', () => {
   describe('Basic functionality', () => {
     it('should handle basic props/attrs usage', () => {
       const { pug, html: expectedHtml } = loadFixture(
-        'phase3',
+        'props-attrs',
         'basic-props-attrs',
       )
       const result = transform(pug, { output: 'html' })
@@ -20,7 +20,7 @@ describe('Phase 3: props/attrs identifiers', () => {
 
     it('should apply default values', () => {
       const { pug, html: expectedHtml } = loadFixture(
-        'phase3',
+        'props-attrs',
         'default-values',
       )
       const result = transform(pug, { output: 'html' })
@@ -33,7 +33,7 @@ describe('Phase 3: props/attrs identifiers', () => {
     })
 
     it('should handle renaming (class: className)', () => {
-      const { pug, html: expectedHtml } = loadFixture('phase3', 'rename')
+      const { pug, html: expectedHtml } = loadFixture('props-attrs', 'rename')
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
@@ -44,7 +44,10 @@ describe('Phase 3: props/attrs identifiers', () => {
     })
 
     it('should handle partial props specification', () => {
-      const { pug, html: expectedHtml } = loadFixture('phase3', 'partial-props')
+      const { pug, html: expectedHtml } = loadFixture(
+        'props-attrs',
+        'partial-props',
+      )
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
@@ -58,7 +61,7 @@ describe('Phase 3: props/attrs identifiers', () => {
   describe('Automatic fallthrough', () => {
     it('should automatically categorize unexpected attributes to attrs', () => {
       const { pug, html: expectedHtml } = loadFixture(
-        'phase3',
+        'props-attrs',
         'unexpected-attrs',
       )
       const result = transform(pug, { output: 'html' })
@@ -74,7 +77,7 @@ describe('Phase 3: props/attrs identifiers', () => {
   describe('Caching', () => {
     it('should handle multiple calls to the same Component', () => {
       const { pug, html: expectedHtml } = loadFixture(
-        'phase3',
+        'props-attrs',
         'multiple-calls',
       )
       const result = transform(pug, { output: 'html' })
@@ -90,7 +93,7 @@ describe('Phase 3: props/attrs identifiers', () => {
   describe('Compatibility', () => {
     it('should maintain Phase 2 compatibility (using attributes)', () => {
       const { pug, html: expectedHtml } = loadFixture(
-        'phase3',
+        'props-attrs',
         'phase2-compatibility',
       )
       const result = transform(pug, { output: 'html' })
@@ -104,7 +107,7 @@ describe('Phase 3: props/attrs identifiers', () => {
 
     it('should integrate with Phase 2.5 (manual control)', () => {
       const { pug, html: expectedHtml } = loadFixture(
-        'phase3',
+        'props-attrs',
         'phase25-integration',
       )
       const result = transform(pug, { output: 'html' })
