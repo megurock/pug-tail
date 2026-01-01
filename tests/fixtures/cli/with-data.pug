@@ -1,0 +1,13 @@
+doctype html
+html
+  head
+    title= title
+    meta(name="description" content=description)
+  body
+    h1= title
+    p Welcome to #{siteName}
+    nav
+      each item in navigation
+        a(href=item.url)= item.label
+    footer
+      p © #{year} #{siteName}

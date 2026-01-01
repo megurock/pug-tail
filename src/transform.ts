@@ -35,6 +35,9 @@ export interface TransformOptions extends ErrorHandlerOptions {
 
   /** Base directory for absolute includes (required for absolute paths) */
   basedir?: string
+
+  /** Data to inject into the template (available as locals) */
+  data?: Record<string, unknown>
 }
 
 /**
@@ -158,6 +161,7 @@ export function transform(
     result.html = generateHTML(transformedAst as Block, {
       pretty: htmlOptions.pretty ?? true,
       compileDebug: htmlOptions.compileDebug ?? false,
+      data: options.data,
     })
     if (debug) {
       console.log('[pug-tail] Generated HTML:', result.html)
@@ -279,7 +283,11 @@ function createPugRuntime() {
  */
 function generateHTML(
   ast: Block,
-  options: { pretty?: boolean; compileDebug?: boolean },
+  options: {
+    pretty?: boolean
+    compileDebug?: boolean
+    data?: Record<string, unknown>
+  },
 ): string {
   try {
     const generatedCode = generateCode(ast, {
@@ -306,8 +314,8 @@ function generateHTML(
       throw new Error('Template function was not returned from generated code')
     }
 
-    // Pass an empty object as `locals`
-    const html = template({})
+    // Pass data as locals to the template
+    const html = template(options.data || {})
 
     // Return an empty string if html is undefined or null
     if (html == null) {

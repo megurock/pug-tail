@@ -34,6 +34,8 @@ export interface FileProcessorOptions {
   extension?: string
   /** Transform options */
   transformOptions?: Omit<TransformOptions, 'filename'>
+  /** Global data to inject into all files */
+  data?: Record<string, unknown>
   /** Silent mode (no log output) */
   silent?: boolean
   /** Debug mode (detailed log output) */
@@ -140,6 +142,7 @@ export class FileProcessor {
       const result = transform(source, {
         filename: absoluteInput,
         ...this.options.transformOptions,
+        data: this.options.data,
       })
 
       // Get output content

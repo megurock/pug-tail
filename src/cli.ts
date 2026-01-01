@@ -8,6 +8,7 @@
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadData } from './cli/dataLoader.js'
 import { FileProcessor } from './cli/fileProcessor.js'
 import { type TransformOptions, transform } from './transform.js'
 
@@ -20,6 +21,9 @@ interface CLIOptions {
 
   /** Output directory or file. */
   output?: string
+
+  /** Data to inject (JSON string or file path). */
+  obj?: string
 
   /** Output format. */
   format?: 'html' | 'ast' | 'pug-code'
@@ -61,6 +65,9 @@ Options:
     -o, --out <dir>           Output directory (or file for single input)
     -E, --extension <ext>     Output file extension (default: .html)
 
+  Data:
+    -O, --obj <str|path>      Data to inject (JSON string or file path)
+
   Formatting:
     -P, --pretty              Pretty print HTML output
     -f, --format <format>     Output format: html, ast, pug-code (default: html)
@@ -83,6 +90,12 @@ Examples:
 
   # Directory (recursive)
   pug-tail src/ -o dist/
+
+  # With data injection (JSON string)
+  pug-tail src/ -o dist/ -O '{"title": "My Site", "year": 2025}'
+
+  # With data injection (JSON file)
+  pug-tail src/ -o dist/ -O data.json
 
   # Pretty print
   pug-tail src/ -o dist/ -P
@@ -134,6 +147,14 @@ function parseArgs(args: string[]): CLIOptions {
       options.silent = true
     } else if (arg === '-P' || arg === '--pretty') {
       options.pretty = true
+    } else if (arg === '-O' || arg === '--obj') {
+      const next = args[i + 1]
+      if (!next || next.startsWith('-')) {
+        console.error('Error: --obj requires a JSON string or file path')
+        process.exit(1)
+      }
+      options.obj = next
+      i++
     } else if (arg === '-o' || arg === '--out' || arg === '--output') {
       const next = args[i + 1]
       if (!next || next.startsWith('-')) {
@@ -241,6 +262,24 @@ function processSingleFile(options: CLIOptions): void {
     process.exit(1)
   }
 
+  // Load data if provided
+  let data: Record<string, unknown> | undefined
+  if (options.obj) {
+    try {
+      data = loadData(options.obj)
+      if (options.debug) {
+        console.log('[pug-tail] Loaded data:', JSON.stringify(data, null, 2))
+      }
+    } catch (error) {
+      console.error(
+        `Error: Failed to load data: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      )
+      process.exit(1)
+    }
+  }
+
   let source: string
   try {
     const inputPath = resolve(process.cwd(), input)
@@ -262,6 +301,7 @@ function processSingleFile(options: CLIOptions): void {
       pretty: options.pretty ?? false,
       compileDebug: false,
     },
+    data,
   }
 
   try {
@@ -326,6 +366,24 @@ function processSingleFile(options: CLIOptions): void {
  * @param options - CLI options
  */
 async function processMultipleFiles(options: CLIOptions): Promise<void> {
+  // Load data if provided
+  let data: Record<string, unknown> | undefined
+  if (options.obj) {
+    try {
+      data = loadData(options.obj)
+      if (options.debug) {
+        console.log('[pug-tail] Loaded data:', JSON.stringify(data, null, 2))
+      }
+    } catch (error) {
+      console.error(
+        `Error: Failed to load data: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      )
+      process.exit(1)
+    }
+  }
+
   const processor = new FileProcessor({
     outputDir: options.output,
     extension: options.extension,
@@ -337,6 +395,7 @@ async function processMultipleFiles(options: CLIOptions): Promise<void> {
         compileDebug: false,
       },
     },
+    data,
     silent: options.silent,
     debug: options.debug,
   })

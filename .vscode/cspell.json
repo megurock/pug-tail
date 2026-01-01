@@ -1,7 +1,7 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": [],
+  "words": ["nodir"],
   "flagWords": [],
   "ignorePaths": [
     "node_modules",

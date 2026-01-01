@@ -1,0 +1,10 @@
+{
+  "siteName": "Test Site",
+  "title": "Test Page",
+  "year": 2025,
+  "description": "This is a test page",
+  "navigation": [
+    { "label": "Home", "url": "/" },
+    { "label": "About", "url": "/about" }
+  ]
+}
