@@ -1,0 +1,7 @@
+component OldCard()
+  - const { title, ...restAttrs } = attributes
+  
+  .card&attributes(restAttrs)
+    h2= title
+
+OldCard(title="Legacy")

@@ -38,6 +38,21 @@ export interface ComponentDefinition {
 
   /** Location information (for error reporting). */
   location: NodeLocation
+
+  /** Usage pattern (Phase 3): which attributes are used from props/attrs. */
+  usage?: ComponentUsage
+}
+
+/**
+ * Component usage pattern (Phase 3).
+ * Represents which attributes are used from props/attrs in a component.
+ */
+export interface ComponentUsage {
+  /** Properties used from 'props' identifier. */
+  fromProps: string[]
+
+  /** Properties used from 'attrs' identifier. */
+  fromAttrs: string[]
 }
 
 /**

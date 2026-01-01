@@ -17,7 +17,7 @@ export {
 export {
   findRootElements,
   findSingleRootElement,
+  hasAnyAttributeBlocks,
   hasMultipleRoots,
   hasSingleRoot,
-  hasAnyAttributeBlocks,
 } from './findRootElements'

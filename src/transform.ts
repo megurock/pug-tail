@@ -211,6 +211,19 @@ function createPugRuntime() {
     rethrow: (err: Error) => {
       throw err
     },
+    // classes function used to generate class attribute
+    classes: (classes: unknown) => {
+      if (Array.isArray(classes)) {
+        return classes.filter(Boolean).join(' ')
+      }
+      if (typeof classes === 'object' && classes !== null) {
+        return Object.entries(classes)
+          .filter(([, val]) => val)
+          .map(([key]) => key)
+          .join(' ')
+      }
+      return String(classes)
+    },
     // merge function used by &attributes
     merge: (...args: unknown[]) => {
       // If the first argument is an array, treat it as the sources list

@@ -5,10 +5,11 @@
  */
 
 import walk from 'pug-walk'
-import type { NodeLocation, SlotDefinition } from '@/types'
+import type { ComponentDefinition, NodeLocation, SlotDefinition } from '@/types'
 import type {
   Block,
   Case,
+  Code,
   Conditional,
   Each,
   Extends,
@@ -17,6 +18,7 @@ import type {
   Tag,
 } from '@/types/pug'
 import { getNodeLocationObject, isCapitalizedTag } from '@/utils/astHelpers'
+import { categorizeAttributes } from '@/utils/attributeCategorizer'
 import {
   addAttributeFallthrough,
   createAttributesCode,
@@ -32,6 +34,11 @@ import {
   isSlotDefinitionNode,
 } from '@/utils/componentDetector'
 import { deepCloneBlock } from '@/utils/deepClone'
+import {
+  createAttrsCode,
+  createPropsCode,
+  detectAttributeUsage,
+} from '@/utils/usageDetector'
 import type { ComponentRegistry } from './componentRegistry'
 import { ErrorHandler, type ErrorHandlerOptions } from './errorHandler'
 import type { SlotResolver } from './slotResolver'
@@ -100,6 +107,7 @@ export class ASTTransformer {
    * Detects all component definitions within the AST and
    * registers them with the ComponentRegistry.
    * Also processes Include and Extends nodes to register components from included/extended files.
+   * Phase 3: Analyzes usage patterns (props/attrs) for each component.
    *
    * @param ast - The AST to search.
    */
@@ -108,6 +116,18 @@ export class ASTTransformer {
       // Register component definitions in the current AST
       if (isComponentDefinitionNode(node)) {
         const definition = extractComponentDefinition(node, this.errorHandler)
+
+        // Phase 3: Detect usage patterns (props/attrs)
+        const usage = detectAttributeUsage(definition.body)
+
+        // Only set usage if props or attrs are actually used
+        // This maintains Phase 2 compatibility
+        if (usage.fromProps.length > 0 || usage.fromAttrs.length > 0) {
+          definition.usage = usage
+        }
+        // If neither props nor attrs are used, leave usage undefined
+        // to fall back to Phase 2 mode (attributes)
+
         this.registry.register(definition)
       }
 
@@ -242,9 +262,9 @@ export class ASTTransformer {
       // Copy the component and replace slots.
       const componentBodyCopy = deepCloneBlock(component.body)
 
-      // Phase 2: Extract and inject attributes
+      // Phase 2/3: Extract and inject attributes
       const attributes = extractAttributes(callNode as Tag)
-      this.injectAttributes(componentBodyCopy, attributes, componentName)
+      this.injectAttributes(componentBodyCopy, attributes, component)
 
       const result = this.replaceSlots(
         componentBodyCopy,
@@ -425,36 +445,83 @@ export class ASTTransformer {
   /**
    * Injects attributes into the component body.
    *
-   * Phase 2.5 implementation:
-   * 1. Inserts a Code node at the beginning of the component body to make
-   *    the attributes object available.
-   * 2. Checks if developer has manually written &attributes anywhere in the component.
+   * Phase 2/3 implementation:
+   * - Phase 3 (with usage): Categorizes attributes into props/attrs and injects both
+   * - Phase 2 (no usage): Injects attributes object (backward compatible)
+   *
+   * Phase 2.5 features:
+   * 1. Checks if developer has manually written &attributes anywhere in the component.
    *    If found, respects manual control and skips automatic fallthrough.
-   * 3. Otherwise, automatically adds &attributes to the single root element for
+   * 2. Otherwise, automatically adds &attributes to the single root element for
    *    attribute fallthrough.
-   * 4. Warns if there are multiple root elements (fallthrough disabled).
+   * 3. Warns if there are multiple root elements (fallthrough disabled).
+   *
+   * Phase 3: Wraps component in block scope to prevent variable conflicts when multiple
+   * components are called in the same scope. Uses const instead of var for block scoping.
    *
    * @param componentBody - The component body Block (already cloned)
    * @param attributes - Map of attribute names to JavaScript expression values
-   * @param componentName - The component name (for warning messages)
+   * @param component - The component definition (includes usage patterns for Phase 3)
    */
   private injectAttributes(
     componentBody: Block,
     attributes: Map<string, string>,
-    componentName: string,
+    component: ComponentDefinition,
   ): void {
-    // 1. Create and insert the attributes Code node at the beginning
-    const attributesCode = createAttributesCode(attributes)
-    componentBody.nodes.unshift(attributesCode)
+    // Phase 3: If component has usage patterns, categorize and inject props/attrs
+    if (component.usage) {
+      const { props, attrs } = categorizeAttributes(attributes, component.usage)
 
-    // 2. Check if developer has manually written &attributes anywhere
+      // Wrap in block scope to prevent variable conflicts
+      // Start block
+      const blockStart: Code = {
+        type: 'Code',
+        val: '{',
+        buffer: false,
+        mustEscape: false,
+        isInline: false,
+        line: 0,
+        column: 0,
+        filename: '',
+      }
+
+      // Create props/attrs Code nodes
+      const propsCode = createPropsCode(props)
+      const attrsCode = createAttrsCode(attrs)
+
+      // End block
+      const blockEnd: Code = {
+        type: 'Code',
+        val: '}',
+        buffer: false,
+        mustEscape: false,
+        isInline: false,
+        line: 0,
+        column: 0,
+        filename: '',
+      }
+
+      // Insert at the beginning
+      componentBody.nodes.unshift(attrsCode)
+      componentBody.nodes.unshift(propsCode)
+      componentBody.nodes.unshift(blockStart)
+
+      // Insert at the end
+      componentBody.nodes.push(blockEnd)
+    } else {
+      // Phase 2: No usage patterns, inject attributes object (backward compatible)
+      const attributesCode = createAttributesCode(attributes)
+      componentBody.nodes.unshift(attributesCode)
+    }
+
+    // Phase 2.5: Check if developer has manually written &attributes anywhere
     if (hasAnyAttributeBlocks(componentBody)) {
       // Developer has manually controlled attributes, respect their choice
       // Do not add automatic fallthrough
       return
     }
 
-    // 3. Handle automatic attribute fallthrough
+    // Phase 2.5: Handle automatic attribute fallthrough
     const singleRoot = findSingleRootElement(componentBody)
 
     if (singleRoot) {
@@ -463,7 +530,7 @@ export class ASTTransformer {
     } else if (hasMultipleRoots(componentBody)) {
       // Multiple root elements: warn and disable fallthrough
       console.warn(
-        `[pug-tail] Component "${componentName}" has multiple root elements. ` +
+        `[pug-tail] Component "${component.name}" has multiple root elements. ` +
           `Attribute fallthrough is disabled. ` +
           `Use &attributes(attrs) explicitly if needed.`,
       )
