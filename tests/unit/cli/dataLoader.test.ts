@@ -13,7 +13,7 @@ describe('dataLoader', () => {
     })
 
     it('should load JSON file', () => {
-      const result = loadData('tests/fixtures/cli/data.json')
+      const result = loadData('tests/fixtures/cli-data/data.json')
       expect(result).toHaveProperty('siteName')
       expect(result).toHaveProperty('title')
       expect(result.siteName).toBe('Test Site')

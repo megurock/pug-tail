@@ -25,6 +25,9 @@ interface CLIOptions {
   /** Data to inject (JSON string or file path). */
   obj?: string
 
+  /** Base directory for absolute includes. */
+  basedir?: string
+
   /** Output format. */
   format?: 'html' | 'ast' | 'pug-code'
 
@@ -68,6 +71,9 @@ Options:
   Data:
     -O, --obj <str|path>      Data to inject (JSON string or file path)
 
+  Pug:
+    -b, --basedir <path>      Base directory for absolute includes
+
   Formatting:
     -P, --pretty              Pretty print HTML output
     -f, --format <format>     Output format: html, ast, pug-code (default: html)
@@ -96,6 +102,9 @@ Examples:
 
   # With data injection (JSON file)
   pug-tail src/ -o dist/ -O data.json
+
+  # With basedir for absolute includes
+  pug-tail src/pages/ -o dist/ -b src/
 
   # Pretty print
   pug-tail src/ -o dist/ -P
@@ -154,6 +163,14 @@ function parseArgs(args: string[]): CLIOptions {
         process.exit(1)
       }
       options.obj = next
+      i++
+    } else if (arg === '-b' || arg === '--basedir') {
+      const next = args[i + 1]
+      if (!next || next.startsWith('-')) {
+        console.error('Error: --basedir requires a path')
+        process.exit(1)
+      }
+      options.basedir = next
       i++
     } else if (arg === '-o' || arg === '--out' || arg === '--output') {
       const next = args[i + 1]
@@ -302,6 +319,7 @@ function processSingleFile(options: CLIOptions): void {
       compileDebug: false,
     },
     data,
+    basedir: options.basedir,
   }
 
   try {
@@ -394,6 +412,7 @@ async function processMultipleFiles(options: CLIOptions): Promise<void> {
         pretty: options.pretty ?? false,
         compileDebug: false,
       },
+      basedir: options.basedir,
     },
     data,
     silent: options.silent,
