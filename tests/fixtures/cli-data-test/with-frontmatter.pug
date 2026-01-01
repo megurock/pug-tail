@@ -1,0 +1,23 @@
+---
+title: Frontmatter Test
+description: Testing frontmatter parsing
+author: Test Author
+year: 2025
+tags:
+  - test
+  - frontmatter
+---
+doctype html
+html
+  head
+    title= title
+    meta(name="description" content=description)
+    meta(name="author" content=author)
+  body
+    h1= title
+    p Description: #{description}
+    p Author: #{author}
+    p Year: #{year}
+    ul
+      each tag in tags
+        li= tag

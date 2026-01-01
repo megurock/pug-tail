@@ -15,6 +15,8 @@ import { resolve } from 'node:path'
 import { glob } from 'glob'
 import type { TransformOptions } from '../transform.js'
 import { transform } from '../transform.js'
+import { mergeData } from './dataLoader.js'
+import { parseFrontmatter } from './frontmatterParser.js'
 import {
   getDirectory,
   isPugFile,
@@ -130,6 +132,12 @@ export class FileProcessor {
       // Read input file
       const source = readFileSync(absoluteInput, 'utf-8')
 
+      // Parse frontmatter
+      const { data: frontmatterData, content } = parseFrontmatter(source)
+
+      // Merge data: frontmatter > global data (-O option)
+      const mergedData = mergeData(this.options.data, frontmatterData)
+
       // Resolve output path
       const pathOptions: PathResolverOptions = {
         outputDir: this.options.outputDir,
@@ -138,11 +146,11 @@ export class FileProcessor {
       }
       const outputPath = resolveOutputPath(absoluteInput, pathOptions)
 
-      // Transform
-      const result = transform(source, {
+      // Transform (use cleaned content without frontmatter)
+      const result = transform(content, {
         filename: absoluteInput,
         ...this.options.transformOptions,
-        data: this.options.data,
+        data: mergedData,
       })
 
       // Get output content

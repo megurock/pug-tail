@@ -231,6 +231,60 @@ describe('CLI Integration Tests', () => {
     })
   })
 
+  describe('Frontmatter support', () => {
+    it('should parse frontmatter and inject data', () => {
+      const result = runCLI([
+        'tests/fixtures/cli-data-test/with-frontmatter.pug',
+        '-o',
+        join(TEST_OUTPUT_DIR, 'with-frontmatter.html'),
+      ])
+
+      expect(result.exitCode).toBe(0)
+
+      const output = readFileSync(
+        join(TEST_OUTPUT_DIR, 'with-frontmatter.html'),
+        'utf-8',
+      )
+      expect(output).toContain('<title>Frontmatter Test</title>')
+      expect(output).toContain('Testing frontmatter parsing')
+      expect(output).toContain('Test Author')
+      expect(output).toContain('Year: 2025')
+      expect(output).toContain('<li>test</li>')
+      expect(output).toContain('<li>frontmatter</li>')
+    })
+
+    it('should merge frontmatter with CLI data (frontmatter wins)', () => {
+      // Create temp data with conflicting values
+      const tempDataPath = join(TEST_OUTPUT_DIR, 'temp-conflict-data.json')
+      const tempData = {
+        title: 'CLI Title', // Should be overridden
+        siteName: 'Test Site', // Should be available
+        year: 2024, // Should be overridden by frontmatter
+      }
+      writeFileSync(tempDataPath, JSON.stringify(tempData), 'utf-8')
+
+      const result = runCLI([
+        'tests/fixtures/cli-data-test/with-frontmatter-override.pug',
+        '-o',
+        join(TEST_OUTPUT_DIR, 'with-override.html'),
+        '-O',
+        tempDataPath,
+      ])
+
+      expect(result.exitCode).toBe(0)
+
+      const output = readFileSync(
+        join(TEST_OUTPUT_DIR, 'with-override.html'),
+        'utf-8',
+      )
+      // Frontmatter values should win
+      expect(output).toContain('<title>Override Title</title>')
+      expect(output).toContain('From frontmatter')
+      // CLI data should be available when not in frontmatter
+      expect(output).toContain('Site: Test Site')
+    })
+  })
+
   describe('Basedir support', () => {
     it('should resolve absolute includes with basedir', () => {
       const result = runCLI([

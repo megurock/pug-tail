@@ -8,8 +8,9 @@
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadData } from './cli/dataLoader.js'
+import { loadData, mergeData } from './cli/dataLoader.js'
 import { FileProcessor } from './cli/fileProcessor.js'
+import { parseFrontmatter } from './cli/frontmatterParser.js'
 import { type TransformOptions, transform } from './transform.js'
 
 /**
@@ -310,6 +311,12 @@ function processSingleFile(options: CLIOptions): void {
     process.exit(1)
   }
 
+  // Parse frontmatter
+  const { data: frontmatterData, content } = parseFrontmatter(source)
+
+  // Merge data: frontmatter > global data (-O option)
+  const mergedData = mergeData(data, frontmatterData)
+
   const transformOptions: TransformOptions = {
     filename: input,
     debug: options.debug ?? false,
@@ -318,12 +325,13 @@ function processSingleFile(options: CLIOptions): void {
       pretty: options.pretty ?? false,
       compileDebug: false,
     },
-    data,
+    data: mergedData,
     basedir: options.basedir,
   }
 
   try {
-    const result = transform(source, transformOptions)
+    // Transform using cleaned content (without frontmatter)
+    const result = transform(content, transformOptions)
 
     let output: string
     if (options.format === 'ast') {
