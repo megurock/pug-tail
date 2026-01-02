@@ -1,0 +1,14 @@
+component Inner()
+  div.inner
+    slot(content)
+      p Default Inner Content
+
+component Outer()
+  div.outer
+    p Outer Start
+    Inner()
+      slot(content)
+        p Content from Outer
+    p Outer End
+
+Outer()

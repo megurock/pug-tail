@@ -213,4 +213,30 @@ describe('Slot system', () => {
       expect(result.html).toContain('<p>Hello!</p>')
     })
   })
+
+  describe('Component in component with slot', () => {
+    test('should handle slot passing when calling component inside component definition', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'nested',
+        'component-in-component-with-slot',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify that slot content from Outer is passed to Inner
+      expect(result.html).toContain('Outer Start')
+      expect(result.html).toContain('Content from Outer')
+      expect(result.html).toContain('Outer End')
+      // Default content should not appear
+      expect(result.html).not.toContain('Default Inner Content')
+    })
+  })
 })

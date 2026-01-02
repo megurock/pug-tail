@@ -5,8 +5,15 @@
 
 import { parse } from '@babel/parser'
 import type { NodePath } from '@babel/traverse'
-import traverse from '@babel/traverse'
+import traverseModule from '@babel/traverse'
 import type { ObjectProperty, VariableDeclarator } from '@babel/types'
+
+// Handle both ESM and CommonJS exports
+// @babel/traverse exports a default function, but the import might be wrapped
+const traverse =
+  typeof traverseModule === 'function'
+    ? traverseModule
+    : (traverseModule as { default: typeof traverseModule }).default
 
 /**
  * Extracts variable names from object destructuring in JavaScript code

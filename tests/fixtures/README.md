@@ -38,3 +38,4 @@ Integration tests are organized by feature:
 - `nested-components.test.ts` - Nested components
 - `edge-cases.test.ts` - Edge cases
 - `include.test.ts` - Include and extends
+

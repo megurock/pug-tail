@@ -1,0 +1,15 @@
+include ./Header.pug
+include ./Footer.pug
+
+component Layout()
+  html(lang="ja")
+    head
+      meta(charset="UTF-8")
+      slot(head)
+    body
+      slot(header)
+        Header()
+      slot(main)
+        p Main content goes here.
+      slot(footer)
+        Footer()

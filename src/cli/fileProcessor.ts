@@ -15,6 +15,11 @@ import { resolve } from 'node:path'
 import { glob } from 'glob'
 import type { TransformOptions } from '../transform.js'
 import { transform } from '../transform.js'
+import {
+  getDefaultIncludePatterns,
+  shouldIncludeFile,
+} from './config/matcher.js'
+import type { PugTailConfig } from './config/types.js'
 import { mergeData } from './dataLoader.js'
 import { parseFrontmatter } from './frontmatterParser.js'
 import {
@@ -23,7 +28,6 @@ import {
   type PathResolverOptions,
   resolveAbsolutePath,
   resolveOutputPath,
-  shouldIgnoreFile,
 } from './pathResolver.js'
 
 /**
@@ -42,6 +46,8 @@ export interface FileProcessorOptions {
   silent?: boolean
   /** Debug mode (detailed log output) */
   debug?: boolean
+  /** Configuration (for file includes patterns) */
+  config?: PugTailConfig
 }
 
 /**
@@ -54,6 +60,8 @@ export interface ProcessResult {
   output: string
   /** Whether the file was successfully processed */
   success: boolean
+  /** Whether the file was ignored (excluded by config) */
+  ignored?: boolean
   /** Error message if failed */
   error?: string
 }
@@ -107,8 +115,18 @@ export class FileProcessor {
     const absoluteInput = resolveAbsolutePath(inputPath)
 
     try {
-      // Check if file should be ignored
-      if (shouldIgnoreFile(absoluteInput)) {
+      // Check if file should be processed based on config patterns
+      const basePath = rootPath || this.rootPath || process.cwd()
+      const patterns =
+        this.options.config?.files?.includes || getDefaultIncludePatterns()
+
+      if (this.options.debug) {
+        this.log(
+          `Checking file: ${inputPath}\n  Absolute: ${absoluteInput}\n  BasePath: ${basePath}\n  Patterns: ${JSON.stringify(patterns)}`,
+        )
+      }
+
+      if (!shouldIncludeFile(absoluteInput, patterns, basePath)) {
         if (this.options.debug) {
           this.log(`Ignored: ${inputPath}`)
         }
@@ -116,6 +134,7 @@ export class FileProcessor {
           input: inputPath,
           output: '',
           success: true, // Not an error, just ignored
+          ignored: true,
         }
       }
 
@@ -132,12 +151,24 @@ export class FileProcessor {
       // Read input file
       const source = readFileSync(absoluteInput, 'utf-8')
 
+      if (this.options.debug) {
+        this.log(
+          `Read source (${source.length} chars):\n${source.substring(0, 200)}...`,
+        )
+      }
+
       // Parse frontmatter
       const {
         data: frontmatterData,
         content,
         dataFiles,
       } = parseFrontmatter(source)
+
+      if (this.options.debug) {
+        this.log(
+          `After frontmatter parse (${content.length} chars):\n${content.substring(0, 200)}...`,
+        )
+      }
 
       // Load data from "@dataFiles" directive
       let dataFilesData: Record<string, unknown> = {}
@@ -324,6 +355,7 @@ export class FileProcessor {
    * Processes a directory recursively.
    *
    * @param dirPath - Path to the directory
+   * @param rootPath - Root path for maintaining directory structure (optional)
    * @returns Array of process results
    *
    * @example
@@ -332,16 +364,22 @@ export class FileProcessor {
    * await processor.processDirectory('src')
    * ```
    */
-  async processDirectory(dirPath: string): Promise<ProcessResult[]> {
+  async processDirectory(
+    dirPath: string,
+    rootPath?: string,
+  ): Promise<ProcessResult[]> {
     const absoluteDir = resolveAbsolutePath(dirPath)
     const results: ProcessResult[] = []
+
+    // Set rootPath to the initial directory if not provided
+    const effectiveRootPath = rootPath || absoluteDir
 
     try {
       const stat = lstatSync(absoluteDir)
 
       if (!stat.isDirectory()) {
         // If it's a file, process it
-        return [await this.processFile(absoluteDir)]
+        return [await this.processFile(absoluteDir, effectiveRootPath)]
       }
 
       // Read directory contents
@@ -352,12 +390,15 @@ export class FileProcessor {
         const entryStat = lstatSync(entryPath)
 
         if (entryStat.isDirectory()) {
-          // Recursively process subdirectory
-          const subResults = await this.processDirectory(entryPath)
+          // Recursively process subdirectory (use same rootPath)
+          const subResults = await this.processDirectory(
+            entryPath,
+            effectiveRootPath,
+          )
           results.push(...subResults)
         } else if (entryStat.isFile()) {
-          // Process file
-          const result = await this.processFile(entryPath, absoluteDir)
+          // Process file (use same rootPath)
+          const result = await this.processFile(entryPath, effectiveRootPath)
           results.push(result)
         }
       }

@@ -358,7 +358,15 @@ export class ASTTransformer {
         }
 
         // Recursively traverse child nodes.
+        // Skip slot nodes inside component call nodes (they are provided slots, not definitions).
         if (node.type === 'Tag' && node.block) {
+          // If this is a component call node, skip traversing its block
+          // because slots inside component calls are provided slots, not slot definitions.
+          if (/^[A-Z]/.test(node.name)) {
+            // Component call nodes are skipped (don't traverse their block)
+            continue
+          }
+          // For regular tags, traverse their block normally
           traverse(node.block)
         } else if (node.type === 'Block') {
           traverse(node)
@@ -526,7 +534,33 @@ export class ASTTransformer {
 
     if (singleRoot) {
       // Single root element: automatically add &attributes
-      addAttributeFallthrough(singleRoot)
+      // Phase 3: use 'attrs', Phase 2: use 'attributes'
+      if (component.usage) {
+        // Phase 3: Exclude attributes that are explicitly used from attrs
+        // (they are already consumed, so don't include them in automatic fallthrough)
+        // Note: We still inject the full attrs object for explicit use,
+        // but for automatic fallthrough, we need to exclude fromAttrs attributes
+        // This is handled by creating a filtered attrs object
+        // However, since we can't modify the attrs object after injection,
+        // we need to check if the root element already has explicit attributes
+        // that match fromAttrs, and if so, we should not add automatic fallthrough
+        // OR: We need to modify the approach to exclude fromAttrs from automatic fallthrough
+
+        // For now, check if any fromAttrs attributes are explicitly set on the root element
+        const fromAttrsSet = new Set(component.usage.fromAttrs)
+        const hasExplicitAttrs = singleRoot.attrs?.some((attr) =>
+          fromAttrsSet.has(attr.name),
+        )
+
+        if (!hasExplicitAttrs) {
+          // No explicit attrs on root, safe to add automatic fallthrough
+          addAttributeFallthrough(singleRoot, 'attrs')
+        }
+        // If hasExplicitAttrs, don't add automatic fallthrough to avoid duplication
+      } else {
+        // Phase 2: use 'attributes'
+        addAttributeFallthrough(singleRoot, 'attributes')
+      }
     } else if (hasMultipleRoots(componentBody)) {
       // Multiple root elements: warn and disable fallthrough
       console.warn(

@@ -43,6 +43,7 @@ export class Watcher {
       data: options.data,
       silent: options.silent,
       debug: options.debug,
+      config: options.config,
     })
 
     this.dependencyTracker = new DependencyTracker(

@@ -290,9 +290,21 @@ export function extractSlotDefinitions(
     }
 
     // Recursively traverse child nodes.
-    if (isTagNode(node) && node.block) {
-      for (const child of node.block.nodes) {
-        traverse(child)
+    // Skip slot nodes inside component call nodes (they are provided slots, not definitions).
+    if (isTagNode(node)) {
+      const tagNode = node as Tag
+      // If this is a component call node, skip traversing its block
+      // because slots inside component calls are provided slots, not slot definitions.
+      // Check if the tag name starts with a capital letter (component call)
+      if (/^[A-Z]/.test(tagNode.name)) {
+        // Component call nodes are skipped (don't traverse their block)
+        return
+      }
+      // For regular tags, traverse their block normally
+      if (tagNode.block) {
+        for (const child of tagNode.block.nodes) {
+          traverse(child)
+        }
       }
     }
 

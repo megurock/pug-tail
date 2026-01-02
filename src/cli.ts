@@ -8,6 +8,7 @@
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { findConfigFile, loadConfig } from './cli/config/loader.js'
 import { loadData, mergeData } from './cli/dataLoader.js'
 import { FileProcessor } from './cli/fileProcessor.js'
 import { parseFrontmatter } from './cli/frontmatterParser.js'
@@ -56,6 +57,9 @@ interface CLIOptions {
 
   /** Watch mode. */
   watch?: boolean
+
+  /** Config file path. */
+  config?: string
 }
 
 /**
@@ -86,6 +90,9 @@ Options:
   Formatting:
     -P, --pretty              Pretty print HTML output
     -f, --format <format>     Output format: html, ast, pug-code (default: html)
+
+  Config:
+    -c, --config <path>       Path to config file (default: auto-detect)
 
   Other:
     -d, --debug               Enable debug output
@@ -220,6 +227,14 @@ function parseArgs(args: string[]): CLIOptions {
         process.exit(1)
       }
       options.format = next
+      i++
+    } else if (arg === '-c' || arg === '--config') {
+      const next = args[i + 1]
+      if (!next || next.startsWith('-')) {
+        console.error('Error: --config requires a config file path')
+        process.exit(1)
+      }
+      options.config = next
       i++
     } else if (arg && !arg.startsWith('-')) {
       // Input file/directory/pattern
@@ -444,8 +459,12 @@ function processSingleFile(options: CLIOptions): void {
  * Processes files using the multi-file mode.
  *
  * @param options - CLI options
+ * @param config - Configuration from file
  */
-async function processMultipleFiles(options: CLIOptions): Promise<void> {
+async function processMultipleFiles(
+  options: CLIOptions,
+  config?: Awaited<ReturnType<typeof loadConfig>>,
+): Promise<void> {
   // Load data if provided
   let data: Record<string, unknown> | undefined
   if (options.obj) {
@@ -480,15 +499,17 @@ async function processMultipleFiles(options: CLIOptions): Promise<void> {
     data,
     silent: options.silent,
     debug: options.debug,
+    config,
   })
 
   const results = await processor.processInputs(options.inputs)
 
-  // Count successes and failures
-  const successful = results.filter((r) => r.success).length
-  const failed = results.filter((r) => !r.success).length
+  // Count successes and failures (exclude ignored files)
+  const processedResults = results.filter((r) => !r.ignored)
+  const successful = processedResults.filter((r) => r.success).length
+  const failed = processedResults.filter((r) => !r.success).length
 
-  if (!options.silent && results.length > 0) {
+  if (!options.silent && processedResults.length > 0) {
     console.log()
     console.log(`Processed ${successful} file(s) successfully`)
     if (failed > 0) {
@@ -529,6 +550,17 @@ async function main(): Promise<void> {
     console.error('Error: No input files specified')
     console.error('Use --help for usage information')
     process.exit(1)
+  }
+
+  // Load configuration file
+  const config = await loadConfig(options.config)
+
+  if (options.debug && config && Object.keys(config).length > 0) {
+    const configPath = options.config || findConfigFile()
+    console.log(
+      `[pug-tail] Loaded config${configPath ? ` from ${configPath}` : ''}:`,
+      JSON.stringify(config, null, 2),
+    )
   }
 
   // Determine mode and process
@@ -575,6 +607,7 @@ async function main(): Promise<void> {
       data,
       silent: options.silent,
       debug: options.debug,
+      config,
     })
 
     await watcher.start()
@@ -595,7 +628,7 @@ async function main(): Promise<void> {
   } else if (useSingleFileMode(options)) {
     processSingleFile(options)
   } else {
-    await processMultipleFiles(options)
+    await processMultipleFiles(options, config)
   }
 }
 

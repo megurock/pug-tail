@@ -13,6 +13,8 @@ import type { AttributeBlock, Tag } from '@/types/pug'
  * will be passed to the root element.
  *
  * @param rootElement - The root Tag node
+ * @param variableName - The variable name to use (default: 'attributes')
+ *                       Use 'attrs' for Phase 3 components, 'attributes' for Phase 2
  * @returns The modified Tag node (mutates in place)
  *
  * @example
@@ -21,16 +23,26 @@ import type { AttributeBlock, Tag } from '@/types/pug'
  * addAttributeFallthrough(rootElement)
  * // After: <div class="card" &attributes(attributes)></div>
  * ```
+ *
+ * @example
+ * ```typescript
+ * // Phase 3: use 'attrs'
+ * addAttributeFallthrough(rootElement, 'attrs')
+ * // After: <div class="card" &attributes(attrs)></div>
+ * ```
  */
-export function addAttributeFallthrough(rootElement: Tag): Tag {
+export function addAttributeFallthrough(
+  rootElement: Tag,
+  variableName: string = 'attributes',
+): Tag {
   if (!hasAttributeBlocks(rootElement)) {
     // Initialize attributeBlocks if it doesn't exist
     if (!rootElement.attributeBlocks) {
       rootElement.attributeBlocks = []
     }
 
-    // Add &attributes(attributes)
-    rootElement.attributeBlocks.push(createAttributeBlock())
+    // Add &attributes(variableName)
+    rootElement.attributeBlocks.push(createAttributeBlock(variableName))
   }
 
   return rootElement
@@ -47,14 +59,17 @@ export function hasAttributeBlocks(tag: Tag): boolean {
 }
 
 /**
- * Creates an AttributeBlock node for &attributes(attributes).
+ * Creates an AttributeBlock node for &attributes(variableName).
  *
+ * @param variableName - The variable name to use (default: 'attributes')
  * @returns An AttributeBlock AST node
  */
-function createAttributeBlock(): AttributeBlock {
+function createAttributeBlock(
+  variableName: string = 'attributes',
+): AttributeBlock {
   return {
     type: 'AttributeBlock',
-    val: 'attributes',
+    val: variableName,
     line: 0,
     column: 0,
     filename: '',

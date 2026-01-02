@@ -1,0 +1,18 @@
+include ./Layout.pug
+include ./Header.pug
+include ./Footer.pug
+include ./Card.pug
+
+component App()
+  Layout()
+    slot(head)
+      title PugTail Example
+    slot(header)
+      Header()
+    slot(main)
+      body
+        h1 Hello, World!
+        p Lorem ipsum dolor sit amet.
+        Card#someId.foo(title="Bye" count=5 class="bar")
+    slot(footer)
+      Footer()
