@@ -1,6 +1,6 @@
 # CLI 機能拡張 - 実装進捗
 
-Phase A および Phase B の実装が完了しました！
+Phase A、B、C の実装が完了しました！
 
 ## 📊 全体の進捗
 
@@ -15,9 +15,9 @@ Phase A および Phase B の実装が完了しました！
 - [x] Step B-3: transform への統合（0.5日）✅
 - [x] Step B-4: `"@dataFiles"` ディレクティブ（0.5日）✅ **NEW**
 
-### Phase C: Watch モード（2-3日）
-- [ ] Step C-1: 基本的な Watch 機能（1-2日）
-- [ ] Step C-2: 依存関係追跡（1日）
+### Phase C: Watch モード（2-3日）✅ 完了
+- [x] Step C-1: 基本的な Watch 機能（1-2日）✅
+- [x] Step C-2: 依存関係追跡（1日）✅
 
 ---
 
@@ -419,6 +419,211 @@ pug-tail src/pages/about.pug -o dist/
 
 ---
 
+## ✅ Phase C: Watch モード（完了）
+
+### Step C-1: 基本的な Watch 機能 ✅
+
+#### 実装したファイル
+
+1. **`src/cli/watcher.ts`** - Watch モードの実装
+   - `Watcher` クラス
+   - chokidar を使ったファイル監視
+   - デバウンス処理
+   - グレースフルシャットダウン
+
+2. **`src/cli.ts`** - CLI の更新
+   - `-w, --watch` オプション追加
+   - Watch モードの統合
+   - SIGINT/SIGTERM ハンドリング
+
+#### 主要な機能
+
+**ファイル監視:**
+- ファイル変更の検知
+- 新規ファイルの追加検知
+- ファイル削除の検知
+
+**デバウンス:**
+- 複数の急速な変更を統合
+- 100ms の遅延（調整可能）
+
+**初回コンパイル:**
+- Watch 開始時に全ファイルをコンパイル
+
+#### 使用例
+
+```bash
+# 基本的な Watch モード
+pug-tail src/ -o dist/ -w
+
+# デバッグモードで Watch
+pug-tail src/ -o dist/ -w -d
+
+# basedir 付きで Watch
+pug-tail src/pages/ -o dist/ -b src/ -w
+
+# データ注入しながら Watch
+pug-tail src/ -o dist/ -O data.json -w
+```
+
+**出力例:**
+```
+🔍 Watching for changes...
+
+📦 Initial compilation...
+  rendered /path/to/output/index.html
+  rendered /path/to/output/about.html
+✅ Ready. Watching for changes...
+💡 Press Ctrl+C to stop
+
+🔄 Updated: /path/to/src/index.pug (5ms)
+✨ Added: /path/to/src/new.pug (3ms)
+🗑️  Deleted: /path/to/src/old.pug
+```
+
+#### 重要な仕様
+
+**Watch モードでは `-o` が必須:**
+```bash
+# ⚠️ エラー
+pug-tail src/ -w
+# Error: Watch mode requires output directory (-o, --out)
+
+# ✅ OK
+pug-tail src/ -o dist/ -w
+```
+
+**無視されるファイル:**
+- dotfiles (`.*`)
+- `node_modules/`
+- `.git/`
+- `_` で始まるファイル（部分テンプレート）
+
+---
+
+### Step C-2: 依存関係追跡 ✅
+
+#### 実装したファイル
+
+1. **`src/cli/dependencyTracker.ts`** - 依存関係追跡
+   - `DependencyTracker` クラス
+   - include/extends の解析
+   - 依存グラフの構築
+   - 循環依存の検出
+
+2. **`src/cli/watcher.ts`** - 統合
+   - 初回コンパイル時に依存グラフを構築
+   - ファイル変更時に依存元を再コンパイル
+
+#### 主要な機能
+
+**依存関係の種類:**
+
+1. **extends の追跡**
+   ```pug
+   // layouts/_base.pug (変更)
+   html
+     body
+       block content
+   
+   // pages/index.pug (自動再コンパイル)
+   extends layouts/_base.pug
+   block content
+     h1 Index
+   ```
+
+2. **include の追跡**
+   ```pug
+   // components/_header.pug (変更)
+   header.header
+     h1 Site Header
+   
+   // pages/home.pug (自動再コンパイル)
+   include components/_header.pug
+   main
+     h1 Home
+   ```
+
+3. **多階層の依存関係**
+   ```
+   components/_component.pug (変更)
+     ↑ include
+   layouts/_layout.pug (再コンパイル)
+     ↑ extends
+   pages/index.pug (再コンパイル)
+   pages/about.pug (再コンパイル)
+   ```
+
+#### パス解決
+
+**相対パス:**
+```pug
+extends layouts/_base.pug        // ファイルからの相対
+include ../components/_header.pug // 親ディレクトリ
+```
+
+**絶対パス (basedir 必須):**
+```pug
+extends /layouts/_base.pug       // basedir/layouts/_base.pug
+include /components/_header.pug  // basedir/components/_header.pug
+```
+
+#### 使用例
+
+**プロジェクト構造:**
+```
+src/
+├── layouts/
+│   └── _base.pug
+├── components/
+│   └── _header.pug
+└── pages/
+    ├── index.pug
+    └── about.pug
+```
+
+**コマンド:**
+```bash
+pug-tail src/pages/ -o dist/ -b src/ -w -d
+```
+
+**初回起動:**
+```
+🔍 Watching for changes...
+
+📦 Initial compilation...
+  rendered dist/index.html
+  rendered dist/about.html
+[watch] Building dependency graph...
+[watch] Found 4 pug files
+[watch] /path/to/pages/index.pug -> 1 dependencies
+[watch] /path/to/pages/about.pug -> 1 dependencies
+✅ Ready. Watching for changes...
+💡 Press Ctrl+C to stop
+```
+
+**`_base.pug` を編集したとき:**
+```
+[watch] File changed: src/layouts/_base.pug
+[watch] 2 dependent(s) will be recompiled
+[watch] /path/to/pages/index.pug depends on 1 file(s)
+  rendered dist/index.html
+🔄 Updated: /path/to/pages/index.pug (7ms)
+[watch] /path/to/pages/about.pug depends on 1 file(s)
+  rendered dist/about.html
+🔄 Updated: /path/to/pages/about.pug (5ms)
+```
+
+#### 循環依存の検出
+
+循環依存が検出された場合、警告が表示されます：
+
+```
+⚠️  Circular dependency detected in: /path/to/file.pug
+```
+
+---
+
 ## 🧪 テスト状況
 
 ### テストの種類
@@ -503,6 +708,7 @@ Formatting:
 Other:
   -d, --debug               Enable debug output
   -s, --silent              Silent mode (no log output)
+  -w, --watch               Watch mode (recompile on file changes)
   -h, --help                Show help message
   -v, --version             Show version number
 ```
@@ -521,8 +727,19 @@ Other:
 ### Phase B の目標 ✅
 - [x] YAML フロントマターのパース
 - [x] データマージロジック（優先順位付き）
+- [x] `"@dataFiles"` ディレクティブ
+- [x] 相対/絶対パス対応
 - [x] 既存機能との統合
 - [x] エラーハンドリング
+
+### Phase C の目標 ✅
+- [x] chokidar を使ったファイル監視
+- [x] ファイル変更時の再コンパイル
+- [x] include/extends の依存関係追跡
+- [x] 多階層の依存関係連鎖
+- [x] 循環依存の検出
+- [x] デバウンス処理
+- [x] グレースフルシャットダウン
 
 ### 品質 ✅
 - [x] 包括的なテストカバレッジ
@@ -532,6 +749,6 @@ Other:
 
 ---
 
-**Updated:** 2025-01-01
-**Status:** Phase A & B Complete, Phase C Ready to Start
-**Test Status:** 218/218 Tests Passing ✅
+**Updated:** 2025-01-02
+**Status:** Phase A, B & C Complete
+**Test Status:** 224/224 Tests Passing ✅

@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { loadData, mergeData } from './cli/dataLoader.js'
 import { FileProcessor } from './cli/fileProcessor.js'
 import { parseFrontmatter } from './cli/frontmatterParser.js'
+import { Watcher } from './cli/watcher.js'
 import { type TransformOptions, transform } from './transform.js'
 
 /**
@@ -49,6 +50,9 @@ interface CLIOptions {
 
   /** Show version. */
   version?: boolean
+
+  /** Watch mode. */
+  watch?: boolean
 }
 
 /**
@@ -82,6 +86,7 @@ Options:
   Other:
     -d, --debug               Enable debug output
     -s, --silent              Silent mode (no log output)
+    -w, --watch               Watch mode (recompile on file changes)
     -h, --help                Show this help message
     -v, --version             Show version number
 
@@ -157,6 +162,8 @@ function parseArgs(args: string[]): CLIOptions {
       options.silent = true
     } else if (arg === '-P' || arg === '--pretty') {
       options.pretty = true
+    } else if (arg === '-w' || arg === '--watch') {
+      options.watch = true
     } else if (arg === '-O' || arg === '--obj') {
       const next = args[i + 1]
       if (!next || next.startsWith('-')) {
@@ -511,7 +518,66 @@ async function main(): Promise<void> {
   }
 
   // Determine mode and process
-  if (useSingleFileMode(options)) {
+  if (options.watch) {
+    // Watch mode requires output directory
+    if (!options.output) {
+      console.error('Error: Watch mode requires output directory (-o, --out)')
+      process.exit(1)
+    }
+
+    // Watch mode
+    // Load data if provided
+    let data: Record<string, unknown> | undefined
+    if (options.obj) {
+      try {
+        data = loadData(options.obj)
+        if (options.debug) {
+          console.log('[pug-tail] Loaded data:', JSON.stringify(data, null, 2))
+        }
+      } catch (error) {
+        console.error(
+          `Error: Failed to load data: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        )
+        process.exit(1)
+      }
+    }
+
+    const watcher = new Watcher({
+      paths: options.inputs,
+      outputDir: options.output,
+      extension: options.extension,
+      transformOptions: {
+        debug: options.debug ?? false,
+        output: options.format ?? 'html',
+        htmlOptions: {
+          pretty: options.pretty ?? false,
+          compileDebug: false,
+        },
+        basedir: options.basedir,
+      },
+      data,
+      silent: options.silent,
+      debug: options.debug,
+    })
+
+    await watcher.start()
+
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      await watcher.stop()
+      process.exit(0)
+    })
+
+    process.on('SIGTERM', async () => {
+      await watcher.stop()
+      process.exit(0)
+    })
+
+    // Keep process running
+    await new Promise(() => {})
+  } else if (useSingleFileMode(options)) {
     processSingleFile(options)
   } else {
     await processMultipleFiles(options)
