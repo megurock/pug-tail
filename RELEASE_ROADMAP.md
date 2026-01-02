@@ -514,6 +514,80 @@ npm publish --tag alpha --access public
 
 ## 🔄 Post-Alpha Roadmap
 
+### Configuration File Support (v1.0.0-beta.1)
+
+**Goal:** Improve developer experience with configuration files
+
+#### Implementation
+
+- [ ] Support multiple config file formats:
+  ```
+  pug-tail.config.js      # JavaScript (recommended)
+  pug-tail.config.mjs     # ES Module
+  pug-tail.config.json    # JSON
+  .pugtailrc              # JSON (short name)
+  .pugtailrc.js           # JavaScript (short name)
+  ```
+
+- [ ] Configuration structure:
+  ```javascript
+  // pug-tail.config.js
+  export default {
+    // Input/Output
+    input: 'src/**/*.pug',
+    output: 'dist',
+    extension: '.html',
+    
+    // Pug options
+    basedir: 'src',
+    doctype: 'html',
+    pretty: true,
+    
+    // Data
+    data: './data/site.json',
+    
+    // Watch options
+    watch: {
+      enabled: false,
+      debounce: 100,
+    },
+    
+    // Advanced
+    ignore: ['**/_*.pug'],
+    silent: false,
+    debug: false,
+  }
+  ```
+
+- [ ] Config file discovery:
+  1. Check current directory
+  2. Check parent directories (up to project root)
+  3. Stop at package.json or git root
+
+- [ ] CLI option to specify config:
+  ```bash
+  pug-tail --config custom.config.js
+  ```
+
+- [ ] Merge priority:
+  ```
+  CLI arguments > Config file > Defaults
+  ```
+
+- [ ] Config validation with helpful error messages
+
+- [ ] Update documentation with config examples
+
+**Benefits:**
+- Cleaner command lines
+- Easier to share project settings
+- Better for CI/CD integration
+- Consistent builds across team
+
+**Note:** This is planned for beta, not alpha release.
+
+---
+
 ### Beta Release (v1.0.0-beta.1)
 
 - Address alpha feedback
