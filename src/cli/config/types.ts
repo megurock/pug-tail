@@ -6,11 +6,45 @@
  * Configuration for pug-tail CLI
  */
 export interface PugTailConfig {
-  /** Input files/directories/patterns */
-  input?: string | string[]
+  /** File-related settings */
+  files?: {
+    /** Input files/directories/patterns */
+    input?: string | string[]
 
-  /** Output directory */
-  output?: string
+    /** Output directory (for multiple files) or file path (for single file) */
+    output?: string
+
+    /**
+     * Root path for maintaining directory structure in output
+     * If specified, files will be output relative to this path instead of the input pattern base
+     *
+     * @example
+     * ```js
+     * // Without root: examples/pages/index.pug → compiled/pages/index.html
+     * // With root: examples/pages/index.pug → compiled/index.html (pages is treated as root)
+     * root: 'examples/pages'
+     * ```
+     */
+    root?: string
+
+    /**
+     * Render patterns - determines which .pug files should be compiled to .html
+     * Supports glob patterns with negation (!)
+     *
+     * Files matching these patterns will be compiled and output.
+     * Files not matching (or matching negation patterns) will be ignored.
+     *
+     * @example
+     * ```js
+     * render: [
+     *   '**\/*.pug',                 // All .pug files
+     *   '!**\/components\/**\/*.pug',   // Exclude components directory
+     *   '!**\/_*.pug',                // Exclude files starting with _
+     * ]
+     * ```
+     */
+    render?: string[]
+  }
 
   /** Output file extension (default: .html) */
   extension?: string
@@ -29,24 +63,6 @@ export interface PugTailConfig {
 
   /** Data to inject (JSON string or file path) */
   data?: string | Record<string, unknown>
-
-  /** File matching patterns */
-  files?: {
-    /**
-     * Include patterns
-     * Supports glob patterns with negation (!)
-     *
-     * @example
-     * ```js
-     * includes: [
-     *   '**\/*.pug',                 // All .pug files
-     *   '!**\/components\/**\/*.pug',   // Exclude components directory
-     *   '!**\/_*.pug',                // Exclude files starting with _
-     * ]
-     * ```
-     */
-    includes?: string[]
-  }
 
   /** Watch mode options */
   watch?: {

@@ -8,7 +8,8 @@
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { findConfigFile, loadConfig } from './cli/config/loader.js'
+import { findConfigFile, loadConfig, mergeConfig } from './cli/config/loader.js'
+import type { PugTailConfig } from './cli/config/types.js'
 import { loadData, mergeData } from './cli/dataLoader.js'
 import { FileProcessor } from './cli/fileProcessor.js'
 import { parseFrontmatter } from './cli/frontmatterParser.js'
@@ -60,6 +61,9 @@ interface CLIOptions {
 
   /** Config file path. */
   config?: string
+
+  /** Render file patterns (which files to compile). */
+  renderFiles?: string[]
 }
 
 /**
@@ -93,6 +97,10 @@ Options:
 
   Config:
     -c, --config <path>       Path to config file (default: auto-detect)
+    --render-files, --render <patterns>  Render file patterns (comma or space separated)
+                                         Determines which .pug files to compile to HTML
+                                         Supports negation patterns (!)
+                                         Example: --render-files "**/*.pug,!**/components/**"
 
   Other:
     -d, --debug               Enable debug output
@@ -236,6 +244,41 @@ function parseArgs(args: string[]): CLIOptions {
       }
       options.config = next
       i++
+    } else if (arg === '--render-files' || arg === '--render') {
+      // Parse comma-separated or space-separated patterns
+      const next = args[i + 1]
+      if (!next || next.startsWith('-')) {
+        console.error('Error: --render-files requires at least one pattern')
+        process.exit(1)
+      }
+      // Support comma-separated: --render-files "**/*.pug,!**/components/**"
+      // Or space-separated: --render-files "**/*.pug" "!**/components/**"
+      if (!options.renderFiles) {
+        options.renderFiles = []
+      }
+      if (next.includes(',')) {
+        // Comma-separated
+        options.renderFiles.push(...next.split(',').map((p) => p.trim()))
+        i++
+      } else {
+        // Space-separated - collect all patterns until next option
+        const patterns: string[] = []
+        let j = i + 1
+        while (j < args.length) {
+          const pattern = args[j]
+          if (!pattern || pattern.startsWith('-')) {
+            break
+          }
+          patterns.push(pattern)
+          j++
+        }
+        if (patterns.length === 0) {
+          console.error('Error: --render-files requires at least one pattern')
+          process.exit(1)
+        }
+        options.renderFiles.push(...patterns)
+        i = j - 1
+      }
     } else if (arg && !arg.startsWith('-')) {
       // Input file/directory/pattern
       options.inputs.push(arg)
@@ -318,7 +361,7 @@ function processSingleFile(options: CLIOptions): void {
   let data: Record<string, unknown> | undefined
   if (options.obj) {
     try {
-      data = loadData(options.obj)
+      data = loadData(options.obj, options.basedir)
       if (options.debug) {
         console.log('[pug-tail] Loaded data:', JSON.stringify(data, null, 2))
       }
@@ -463,13 +506,19 @@ function processSingleFile(options: CLIOptions): void {
  */
 async function processMultipleFiles(
   options: CLIOptions,
-  config?: Awaited<ReturnType<typeof loadConfig>>,
+  config?: PugTailConfig,
 ): Promise<void> {
-  // Load data if provided
+  // Load data if provided (CLI -O takes precedence over config.data)
   let data: Record<string, unknown> | undefined
-  if (options.obj) {
+  const dataSource = options.obj || config?.data
+  const basedir = config?.basedir || options.basedir
+  if (dataSource) {
     try {
-      data = loadData(options.obj)
+      if (typeof dataSource === 'string') {
+        data = loadData(dataSource, basedir)
+      } else {
+        data = dataSource
+      }
       if (options.debug) {
         console.log('[pug-tail] Loaded data:', JSON.stringify(data, null, 2))
       }
@@ -529,11 +578,6 @@ async function processMultipleFiles(
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
 
-  if (args.length === 0) {
-    showHelp()
-    process.exit(0)
-  }
-
   const options = parseArgs(args)
 
   if (options.help) {
@@ -546,38 +590,106 @@ async function main(): Promise<void> {
     process.exit(0)
   }
 
-  if (options.inputs.length === 0) {
+  // Load configuration file
+  const configFile = await loadConfig(options.config)
+
+  // If no CLI args and no input in config, show help
+  if (args.length === 0 && !configFile.files?.input) {
+    showHelp()
+    process.exit(0)
+  }
+
+  // Merge config file with CLI options (CLI options take precedence)
+  // Only include properties that are explicitly set in CLI options
+  const cliConfig: Partial<PugTailConfig> = {}
+  if (options.inputs.length > 0 || options.output || options.renderFiles) {
+    cliConfig.files = {}
+    if (options.inputs.length > 0) {
+      cliConfig.files.input = options.inputs
+    }
+    if (options.output) {
+      cliConfig.files.output = options.output
+    }
+    if (options.renderFiles) {
+      cliConfig.files.render = options.renderFiles
+    }
+  }
+  if (options.extension) {
+    cliConfig.extension = options.extension
+  }
+  if (options.basedir) {
+    cliConfig.basedir = options.basedir
+  }
+  if (options.doctype) {
+    cliConfig.doctype = options.doctype
+  }
+  if (options.pretty !== undefined) {
+    cliConfig.pretty = options.pretty
+  }
+  if (options.format) {
+    cliConfig.format = options.format
+  }
+  if (options.obj) {
+    cliConfig.data = options.obj
+  }
+  if (options.silent !== undefined) {
+    cliConfig.silent = options.silent
+  }
+  if (options.debug !== undefined) {
+    cliConfig.debug = options.debug
+  }
+  if (options.watch) {
+    cliConfig.watch = { enabled: true }
+  }
+
+  const mergedConfig = mergeConfig(configFile, cliConfig)
+
+  // Check if inputs are specified (from CLI or config)
+  const inputs =
+    options.inputs.length > 0
+      ? options.inputs
+      : mergedConfig.files?.input
+        ? Array.isArray(mergedConfig.files.input)
+          ? mergedConfig.files.input
+          : [mergedConfig.files.input]
+        : []
+
+  if (inputs.length === 0) {
     console.error('Error: No input files specified')
     console.error('Use --help for usage information')
     process.exit(1)
   }
 
-  // Load configuration file
-  const config = await loadConfig(options.config)
-
-  if (options.debug && config && Object.keys(config).length > 0) {
+  if (mergedConfig.debug && configFile && Object.keys(configFile).length > 0) {
     const configPath = options.config || findConfigFile()
     console.log(
       `[pug-tail] Loaded config${configPath ? ` from ${configPath}` : ''}:`,
-      JSON.stringify(config, null, 2),
+      JSON.stringify(configFile, null, 2),
     )
   }
 
   // Determine mode and process
-  if (options.watch) {
+  if (mergedConfig.watch?.enabled || options.watch) {
     // Watch mode requires output directory
-    if (!options.output) {
+    const outputDir = mergedConfig.files?.output || options.output
+    if (!outputDir) {
       console.error('Error: Watch mode requires output directory (-o, --out)')
       process.exit(1)
     }
 
     // Watch mode
-    // Load data if provided
+    // Load data if provided (CLI -O takes precedence over config.data)
     let data: Record<string, unknown> | undefined
-    if (options.obj) {
+    const dataSource = options.obj || mergedConfig.data
+    const basedir = mergedConfig.basedir || options.basedir
+    if (dataSource) {
       try {
-        data = loadData(options.obj)
-        if (options.debug) {
+        if (typeof dataSource === 'string') {
+          data = loadData(dataSource, basedir)
+        } else {
+          data = dataSource
+        }
+        if (mergedConfig.debug || options.debug) {
           console.log('[pug-tail] Loaded data:', JSON.stringify(data, null, 2))
         }
       } catch (error) {
@@ -591,23 +703,24 @@ async function main(): Promise<void> {
     }
 
     const watcher = new Watcher({
-      paths: options.inputs,
-      outputDir: options.output,
-      extension: options.extension,
+      paths: inputs,
+      outputDir,
+      extension: mergedConfig.extension,
       transformOptions: {
-        debug: options.debug ?? false,
-        output: options.format ?? 'html',
+        debug: mergedConfig.debug ?? false,
+        output: mergedConfig.format ?? 'html',
         htmlOptions: {
-          pretty: options.pretty ?? false,
+          pretty: mergedConfig.pretty ?? false,
           compileDebug: false,
-          doctype: options.doctype,
+          doctype: mergedConfig.doctype,
         },
-        basedir: options.basedir,
+        basedir: mergedConfig.basedir,
       },
       data,
-      silent: options.silent,
-      debug: options.debug,
-      config,
+      silent: mergedConfig.silent,
+      debug: mergedConfig.debug,
+      config: mergedConfig,
+      debounce: mergedConfig.watch?.debounce,
     })
 
     await watcher.start()
@@ -626,9 +739,41 @@ async function main(): Promise<void> {
     // Keep process running
     await new Promise(() => {})
   } else if (useSingleFileMode(options)) {
-    processSingleFile(options)
+    // For single file mode, merge config but CLI options take precedence
+    const singleFileOptions: CLIOptions = {
+      ...options,
+      output: options.output || mergedConfig.files?.output,
+      extension: options.extension || mergedConfig.extension,
+      basedir: options.basedir || mergedConfig.basedir,
+      format: options.format || mergedConfig.format,
+      pretty: options.pretty ?? mergedConfig.pretty,
+      doctype: options.doctype || mergedConfig.doctype,
+      debug: options.debug ?? mergedConfig.debug,
+      silent: options.silent ?? mergedConfig.silent,
+      obj:
+        options.obj ||
+        (typeof mergedConfig.data === 'string' ? mergedConfig.data : undefined),
+    }
+    processSingleFile(singleFileOptions)
   } else {
-    await processMultipleFiles(options, config)
+    // Use merged config for multiple files mode
+    // Create merged options from config and CLI
+    const mergedOptions: CLIOptions = {
+      inputs,
+      output: mergedConfig.files?.output,
+      obj:
+        options.obj ||
+        (typeof mergedConfig.data === 'string' ? mergedConfig.data : undefined),
+      basedir: mergedConfig.basedir,
+      format: mergedConfig.format,
+      extension: mergedConfig.extension,
+      pretty: mergedConfig.pretty,
+      doctype: mergedConfig.doctype,
+      debug: mergedConfig.debug,
+      silent: mergedConfig.silent,
+    }
+
+    await processMultipleFiles(mergedOptions, mergedConfig)
   }
 }
 

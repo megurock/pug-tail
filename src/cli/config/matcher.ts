@@ -6,7 +6,7 @@ import { relative } from 'node:path'
 import { minimatch } from 'minimatch'
 
 /**
- * Check if a file should be included based on patterns
+ * Check if a file should be output based on patterns
  *
  * Supports negation patterns (starting with !)
  * Later patterns override earlier ones
@@ -14,14 +14,14 @@ import { minimatch } from 'minimatch'
  * @param filePath - Absolute file path to check
  * @param patterns - Array of glob patterns (supports ! for negation)
  * @param basePath - Base path for relative matching
- * @returns True if file should be included
+ * @returns True if file should be compiled and output
  *
  * @example
  * ```ts
  * shouldIncludeFile('/project/src/index.pug', [
- *   '**\/*.pug',              // Include all .pug
+ *   '**\/*.pug',              // Output all .pug
  *   '!**\/components\/**',    // Exclude components
- *   'src/index.pug'         // But include index.pug
+ *   'src/index.pug'         // But output index.pug
  * ], '/project')
  * // Returns: true
  * ```
@@ -57,12 +57,12 @@ export function shouldIncludeFile(
 }
 
 /**
- * Get default include patterns
+ * Get default output patterns
  * Used when no config file is present
  *
  * @returns Default patterns (excludes _ files)
  */
-export function getDefaultIncludePatterns(): string[] {
+export function getDefaultOutputPatterns(): string[] {
   return [
     '**/*.pug', // All .pug files
     '!**/_*.pug', // Exclude files starting with _

@@ -130,6 +130,10 @@ export function mergeConfig(
     files: {
       ...config.files,
       ...cliOptions.files,
+      // Merge each property (CLI takes precedence)
+      input: cliOptions.files?.input || config.files?.input,
+      output: cliOptions.files?.output || config.files?.output,
+      render: cliOptions.files?.render || config.files?.render,
     },
     watch: {
       ...config.watch,

@@ -19,8 +19,8 @@
   "scripts": {
     "prepare": "lefthook install",
     "start": "npm run test:dev",
-    "pug-tail:dev": "node dist/cli.js examples -o compiled -w -P",
-    "pug-tail:build": "node dist/cli.js examples -o compiled -P",
+    "pug-tail:dev": "node dist/cli.js -w",
+    "pug-tail:build": "node dist/cli.js",
     "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

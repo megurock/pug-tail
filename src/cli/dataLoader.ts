@@ -15,6 +15,7 @@ import { resolve } from 'node:path'
  * - JSON files: data.json
  *
  * @param input - JSON string or file path
+ * @param basedir - Optional base directory for resolving file paths
  * @returns Parsed data object
  * @throws {Error} If the input cannot be parsed or loaded
  *
@@ -24,14 +25,23 @@ import { resolve } from 'node:path'
  * const data = loadData('{"title": "Hello", "year": 2025}')
  * // → { title: "Hello", year: 2025 }
  *
- * // JSON file
+ * // JSON file (from process.cwd())
  * const data = loadData('data.json')
  * // → contents of data.json
+ *
+ * // JSON file (from basedir)
+ * const data = loadData('data.json', '/project/src')
+ * // → contents of /project/src/data.json
  * ```
  */
-export function loadData(input: string): Record<string, unknown> {
+export function loadData(
+  input: string,
+  basedir?: string,
+): Record<string, unknown> {
   // Try to load as a file first
-  const filePath = resolve(process.cwd(), input)
+  // If basedir is provided, resolve from basedir; otherwise from process.cwd()
+  const basePath = basedir || process.cwd()
+  const filePath = resolve(basePath, input)
 
   try {
     // Check if it's a file path
