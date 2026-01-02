@@ -466,7 +466,7 @@ export class FileProcessor {
             // For 'examples/**/*.pug', rootPath should be 'examples'
             // For 'src/pages/**/*.pug', rootPath should be 'src/pages'
             const globMatch = input.match(/^(.+?)(?:\*\*|\*)/)
-            if (globMatch && globMatch[1]) {
+            if (globMatch?.[1]) {
               // Remove trailing slashes
               const extractedRoot = globMatch[1].replace(/[/\\]+$/, '')
               if (extractedRoot) {
