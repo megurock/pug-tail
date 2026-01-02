@@ -31,6 +31,8 @@ export interface TransformOptions extends ErrorHandlerOptions {
     pretty?: boolean
     /** Include compile-time debug info */
     compileDebug?: boolean
+    /** Doctype to use */
+    doctype?: string
   }
 
   /** Base directory for absolute includes (required for absolute paths) */
@@ -161,6 +163,7 @@ export function transform(
     result.html = generateHTML(transformedAst as Block, {
       pretty: htmlOptions.pretty ?? true,
       compileDebug: htmlOptions.compileDebug ?? false,
+      doctype: htmlOptions.doctype,
       data: options.data,
     })
     if (debug) {
@@ -286,6 +289,7 @@ function generateHTML(
   options: {
     pretty?: boolean
     compileDebug?: boolean
+    doctype?: string
     data?: Record<string, unknown>
   },
 ): string {
@@ -293,6 +297,7 @@ function generateHTML(
     const generatedCode = generateCode(ast, {
       compileDebug: options.compileDebug ?? false,
       pretty: options.pretty ?? true,
+      doctype: options.doctype,
     })
 
     const pugRuntime = createPugRuntime()

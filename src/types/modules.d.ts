@@ -122,6 +122,7 @@ declare module 'pug-code-gen' {
     pretty?: boolean
     inlineRuntimeFunctions?: boolean
     templateName?: string
+    doctype?: string
   }
 
   function generateCode(ast: Block, options?: CodeGenOptions): string

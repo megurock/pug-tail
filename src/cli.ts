@@ -39,6 +39,9 @@ interface CLIOptions {
   /** Pretty print HTML. */
   pretty?: boolean
 
+  /** Doctype to use. */
+  doctype?: string
+
   /** Enable debug output. */
   debug?: boolean
 
@@ -78,6 +81,7 @@ Options:
 
   Pug:
     -b, --basedir <path>      Base directory for absolute includes
+    --doctype <str>           Specify doctype (e.g., html, xml, transitional)
 
   Formatting:
     -P, --pretty              Pretty print HTML output
@@ -179,6 +183,14 @@ function parseArgs(args: string[]): CLIOptions {
         process.exit(1)
       }
       options.basedir = next
+      i++
+    } else if (arg === '--doctype') {
+      const next = args[i + 1]
+      if (!next || next.startsWith('-')) {
+        console.error('Error: --doctype requires a doctype string')
+        process.exit(1)
+      }
+      options.doctype = next
       i++
     } else if (arg === '-o' || arg === '--out' || arg === '--output') {
       const next = args[i + 1]
@@ -365,6 +377,7 @@ function processSingleFile(options: CLIOptions): void {
     htmlOptions: {
       pretty: options.pretty ?? false,
       compileDebug: false,
+      doctype: options.doctype,
     },
     data: mergedData,
     basedir: options.basedir,
@@ -460,6 +473,7 @@ async function processMultipleFiles(options: CLIOptions): Promise<void> {
       htmlOptions: {
         pretty: options.pretty ?? false,
         compileDebug: false,
+        doctype: options.doctype,
       },
       basedir: options.basedir,
     },
@@ -554,6 +568,7 @@ async function main(): Promise<void> {
         htmlOptions: {
           pretty: options.pretty ?? false,
           compileDebug: false,
+          doctype: options.doctype,
         },
         basedir: options.basedir,
       },
