@@ -1,6 +1,7 @@
 component Header()
   - const { navigation } = props
   header
-    nav 
+    p= siteName
+    nav
       each item in navigation
         a(href=item.url)= item.label

@@ -4,5 +4,11 @@
 ---
 
 include ../components/Layout.pug
+include ../components/Card.pug
 
 Layout(navigation=navigation)
+  slot(main)
+    body
+      h1 Hello, World!
+      p Lorem, ipsum dolor.
+      Card#someId.foo(title="Bye" count=5 class="bar")
