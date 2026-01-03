@@ -231,18 +231,18 @@ describe('CLI Integration Tests', () => {
     })
   })
 
-  describe('Frontmatter support', () => {
-    it('should parse frontmatter and inject data', () => {
+  describe('Inline data support', () => {
+    it('should use inline Pug constants as data', () => {
       const result = runCLI([
-        'tests/fixtures/cli-data-test/with-frontmatter.pug',
+        'tests/fixtures/cli-data-test/with-inline-data.pug',
         '-o',
-        join(TEST_OUTPUT_DIR, 'with-frontmatter.html'),
+        join(TEST_OUTPUT_DIR, 'with-inline-data.html'),
       ])
 
       expect(result.exitCode).toBe(0)
 
       const output = readFileSync(
-        join(TEST_OUTPUT_DIR, 'with-frontmatter.html'),
+        join(TEST_OUTPUT_DIR, 'with-inline-data.html'),
         'utf-8',
       )
       expect(output).toContain('<title>Frontmatter Test</title>')
@@ -263,7 +263,7 @@ describe('CLI Integration Tests', () => {
       writeFileSync(tempDataPath, JSON.stringify(tempData), 'utf-8')
 
       const result = runCLI([
-        'tests/fixtures/cli-data-test/with-frontmatter-override.pug',
+        'tests/fixtures/cli-data-test/with-inline-data-override.pug',
         '-o',
         join(TEST_OUTPUT_DIR, 'with-override.html'),
         '-O',

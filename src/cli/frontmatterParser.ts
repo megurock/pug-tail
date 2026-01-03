@@ -1,6 +1,9 @@
 /**
  * Frontmatter parser for Pug files.
  *
+ * @deprecated This module is deprecated and will be removed in a future version.
+ * Use $dataFiles or inline Pug constants instead of YAML frontmatter.
+ *
  * Parses YAML frontmatter from Pug files and extracts both the data and the cleaned content.
  *
  * @module cli/frontmatterParser

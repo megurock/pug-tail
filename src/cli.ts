@@ -10,9 +10,8 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { findConfigFile, loadConfig, mergeConfig } from './cli/config/loader.js'
 import type { PugTailConfig } from './cli/config/types.js'
-import { loadData, mergeData } from './cli/dataLoader.js'
+import { loadData } from './cli/dataLoader.js'
 import { FileProcessor } from './cli/fileProcessor.js'
-import { parseFrontmatter } from './cli/frontmatterParser.js'
 import { Watcher } from './cli/watcher.js'
 import { type TransformOptions, transform } from './transform.js'
 
@@ -388,57 +387,6 @@ function processSingleFile(options: CLIOptions): void {
     process.exit(1)
   }
 
-  // Parse frontmatter
-  const { data: frontmatterData, content, dataFiles } = parseFrontmatter(source)
-
-  if (options.debug) {
-    console.log('[pug-tail] Frontmatter parsed:', {
-      dataFiles,
-      frontmatterData,
-    })
-  }
-
-  // Load data from "@dataFiles" directive
-  let dataFilesData: Record<string, unknown> = {}
-  if (dataFiles.length > 0) {
-    for (const dataFile of dataFiles) {
-      try {
-        // Resolve path: absolute (from basedir) or relative (from input file)
-        let dataFilePath: string
-        if (dataFile.startsWith('/')) {
-          // Absolute path from basedir
-          if (options.basedir) {
-            dataFilePath = resolve(options.basedir, dataFile.slice(1))
-          } else {
-            console.error(
-              `Error: Absolute path "${dataFile}" requires basedir option (-b, --basedir)`,
-            )
-            process.exit(1)
-          }
-        } else {
-          // Relative path from input file
-          const inputDir = dirname(resolve(process.cwd(), input))
-          dataFilePath = resolve(inputDir, dataFile)
-        }
-
-        const fileData = JSON.parse(readFileSync(dataFilePath, 'utf-8'))
-        dataFilesData = mergeData(dataFilesData, fileData)
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error)
-        console.error(`Error loading data file "${dataFile}":`, errorMessage)
-        process.exit(1)
-      }
-    }
-  }
-
-  // Merge data: CLI -O → @dataFiles → frontmatter direct
-  const mergedData = mergeData(data, dataFilesData, frontmatterData)
-
-  if (options.debug) {
-    console.log('[pug-tail] Merged data:', JSON.stringify(mergedData, null, 2))
-  }
-
   // Resolve basePath for $dataFiles (relative to input file)
   const inputDir = dirname(resolve(process.cwd(), input))
 
@@ -451,14 +399,13 @@ function processSingleFile(options: CLIOptions): void {
       compileDebug: false,
       doctype: options.doctype,
     },
-    data: mergedData,
+    data: data,
     basedir: options.basedir,
     basePath: inputDir,
   }
 
   try {
-    // Transform using cleaned content (without frontmatter)
-    const result = transform(content, transformOptions)
+    const result = transform(source, transformOptions)
 
     let output: string
     if (options.format === 'ast') {
