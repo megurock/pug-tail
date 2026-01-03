@@ -1,8 +1,8 @@
 pre-commit:
   parallel: true
   commands:
-    fix:
-      run: npm run fix
+    check:
+      run: npm run check
     test:
       run: npm test
 

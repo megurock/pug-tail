@@ -99,6 +99,9 @@ export class FileProcessor {
 
   constructor(options: FileProcessorOptions = {}) {
     this.options = options
+    if (options.config?.files?.root) {
+      this.rootPath = resolveAbsolutePath(options.config.files.root)
+    }
   }
 
   /**
@@ -456,13 +459,16 @@ export class FileProcessor {
           // Extract root path from glob pattern for maintaining directory structure
           // For 'examples/**/*.pug', rootPath should be 'examples'
           // For 'src/pages/**/*.pug', rootPath should be 'src/pages'
-          let rootPath: string | undefined
-          const globMatch = input.match(/^(.+?)(?:\*\*|\*)/)
-          if (globMatch?.[1]) {
-            // Remove trailing slashes
-            const extractedRoot = globMatch[1].replace(/[/\\]+$/, '')
-            if (extractedRoot) {
-              rootPath = resolveAbsolutePath(extractedRoot)
+          let rootPath: string | undefined = this.rootPath // Use instance rootPath if available
+          if (!rootPath) {
+            // Only infer from glob if not already set
+            const globMatch = input.match(/^(.+?)(?:\*\*|\*)/)
+            if (globMatch?.[1]) {
+              // Remove trailing slashes
+              const extractedRoot = globMatch[1].replace(/[/\\]+$/, '')
+              if (extractedRoot) {
+                rootPath = resolveAbsolutePath(extractedRoot)
+              }
             }
           }
           const patternResults = await this.processPattern(input, rootPath)
