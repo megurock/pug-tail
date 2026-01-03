@@ -60,16 +60,16 @@ describe('Phase 3.5: Dynamic data in component attributes', () => {
     it('should handle multiple levels of nesting', () => {
       const source = `
 component Level3()
-  - const { val } = props
+  - const { val } = $props
   span= val
 
 component Level2()
-  - const { data } = props
+  - const { data } = $props
   div
     Level3(val=data)
 
 component Level1()
-  - const { myData } = props
+  - const { myData } = $props
   section
     Level2(data=myData)
 
@@ -90,7 +90,7 @@ Level1(myData=testValue)
     it('should detect simple variable references', () => {
       const source = `
 component Test()
-  - const { data } = props
+  - const { data } = $props
   p= data
 
 Test(data=myVar)
@@ -109,7 +109,7 @@ Test(data=myVar)
     it('should ignore literal values', () => {
       const source = `
 component Test()
-  - const { str, num, bool } = props
+  - const { str, num, bool } = $props
   p= str
 
 Test(str="literal" num=42 bool=true)
@@ -126,7 +126,7 @@ Test(str="literal" num=42 bool=true)
     it('should handle mixed literals and variables', () => {
       const source = `
 component Test()
-  - const { str, data } = props
+  - const { str, data } = $props
   p= str
   p= data
 
@@ -140,7 +140,7 @@ Test(str="literal" data=myVar)
 
       // Phase 3.5: Variables should be in function parameters
       expect(result.code).toMatch(/function.*\bmyVar\b/)
-      expect(result.code).toContain('const props = ')
+      expect(result.code).toContain('var $props = ')
     })
   })
 })

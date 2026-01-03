@@ -5,14 +5,14 @@ navigation:
 ---
 
 component Header()
-  - const { nav } = props
+  - const { nav } = $props
   header
     nav
       each item in nav
         a(href=item.url)= item.label
 
 component Layout()
-  - const { navigation } = props
+  - const { navigation } = $props
   html
     head
       title Test

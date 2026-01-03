@@ -27,7 +27,7 @@
 **解決策:**
 ```pug
 component Card()
-  - const { title } = props
+  - const { title } = $props
   .card
     h2= title
 
@@ -444,8 +444,8 @@ merge: (...args: unknown[]) => {
 **基本的な使い方:**
 ```pug
 component Card()
-  - const { title, count } = props
-  - const { class: className = "card" } = attrs
+  - const { title, count } = $props
+  - const { class: className = "card" } = $attrs
   
   .card(class=className)
     h2= title
@@ -469,8 +469,8 @@ var props = { "title": "Hello", "count": 5 }
 var attrs = { "class": "my-card" }
 
 // ユーザーのコード（そのまま）
-const { title, count } = props
-const { class: className = "card" } = attrs
+const { title, count } = $props
+const { class: className = "card" } = $attrs
 ```
 
 **特徴:**
@@ -486,8 +486,8 @@ const { class: className = "card" } = attrs
 **JavaScript 標準の分割代入構文を使用:**
 ```pug
 component Button()
-  - const { label, type = "button", disabled = false } = props
-  - const { class: className = "btn" } = attrs
+  - const { label, type = "button", disabled = false } = $props
+  - const { class: className = "btn" } = $attrs
   
   button(type=type disabled=disabled class=className)
     = label
@@ -524,14 +524,14 @@ function detectAttributeUsage(componentBody: Block): {
     if (node.type === 'Code') {
       const code = node.val
       
-      // "const { title, count } = props" を検出
-      if (code.includes('= props')) {
+      // "const { title, count } = $props" を検出
+      if (code.includes('= $props')) {
         const vars = extractDestructuredVars(code)
         fromProps.push(...vars)  // ['title', 'count']
       }
       
-      // "const { class: className } = attrs" を検出
-      if (code.includes('= attrs')) {
+      // "const { class: className } = $attrs" を検出
+      if (code.includes('= $attrs')) {
         const vars = extractDestructuredVars(code)
         fromAttrs.push(...vars)  // ['class']
       }
@@ -586,10 +586,10 @@ function extractDestructuredVars(code: string): string[] {
 ```
 
 **対応する構文:**
-- ✅ 基本的な分割代入: `const { title } = props`
-- ✅ デフォルト値: `const { title = "Default" } = props`
-- ✅ リネーム: `const { class: className } = attrs`
-- ✅ 複合: `const { title = "Default", class: className = "card" } = props`
+- ✅ 基本的な分割代入: `const { title } = $props`
+- ✅ デフォルト値: `const { title = "Default" } = $props`
+- ✅ リネーム: `const { class: className } = $attrs`
+- ✅ 複合: `const { title = "Default", class: className = "card" } = $props`
 
 ---
 
@@ -598,7 +598,7 @@ function extractDestructuredVars(code: string): string[] {
 **Phase 2.5 の手動制御を尊重:**
 ```pug
 component Input()
-  - const { label, placeholder } = props
+  - const { label, placeholder } = $props
   .wrapper
     label= label
     input.field&attributes(attrs)  // ← 明示的に制御（Phase 2.5）
@@ -630,8 +630,8 @@ component Card()
     p Count: #{count}
 
   // または Phase 3 スタイル（推奨）
-  - const { title, count } = props
-  - const { class } = attrs
+  - const { title, count } = $props
+  - const { class } = $attrs
 ```
 
 **動作:**
@@ -660,7 +660,7 @@ component Card()
 **代わりに:**
 ```pug
 // JavaScript 標準構文を使用
-- const { title = "Hello" } = props
+- const { title = "Hello" } = $props
 ```
 
 ---
@@ -818,8 +818,8 @@ component Card()
 **Phase 3:**
 ```pug
 component Card()
-  - const { title, count } = props
-  - const { class: className } = attrs
+  - const { title, count } = $props
+  - const { class: className } = $attrs
   
   .card(class=className)
     h2= title

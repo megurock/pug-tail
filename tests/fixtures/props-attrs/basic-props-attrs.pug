@@ -1,7 +1,7 @@
 component Card()
-  - const { title, count } = props
-  - const { class: className } = attrs
-  
+  - const { title, count } = $props
+  - const { class: className } = $attrs
+
   .card(class=className)
     h2= title
     p Count: #{count}

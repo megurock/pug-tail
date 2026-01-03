@@ -606,7 +606,7 @@ export class ASTTransformer {
 
         if (!hasExplicitAttrs) {
           // No explicit attrs on root, safe to add automatic fallthrough
-          addAttributeFallthrough(singleRoot, 'attrs')
+          addAttributeFallthrough(singleRoot, '$attrs')
         }
         // If hasExplicitAttrs, don't add automatic fallthrough to avoid duplication
       } else {
@@ -618,7 +618,7 @@ export class ASTTransformer {
       console.warn(
         `[pug-tail] Component "${component.name}" has multiple root elements. ` +
           `Attribute fallthrough is disabled. ` +
-          `Use &attributes(attrs) explicitly if needed.`,
+          `Use &attributes($attrs) explicitly if needed.`,
       )
     }
     // If there are no root elements (empty component), do nothing

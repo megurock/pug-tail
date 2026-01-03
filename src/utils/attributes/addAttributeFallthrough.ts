@@ -14,7 +14,7 @@ import type { AttributeBlock, Tag } from '@/types/pug'
  *
  * @param rootElement - The root Tag node
  * @param variableName - The variable name to use (default: 'attributes')
- *                       Use 'attrs' for Phase 3 components, 'attributes' for Phase 2
+ *                       Use '$attrs' for Phase 3 components, 'attributes' for Phase 2
  * @returns The modified Tag node (mutates in place)
  *
  * @example
@@ -26,9 +26,9 @@ import type { AttributeBlock, Tag } from '@/types/pug'
  *
  * @example
  * ```typescript
- * // Phase 3: use 'attrs'
- * addAttributeFallthrough(rootElement, 'attrs')
- * // After: <div class="card" &attributes(attrs)></div>
+ * // Phase 3: use '$attrs'
+ * addAttributeFallthrough(rootElement, '$attrs')
+ * // After: <div class="card" &attributes($attrs)></div>
  * ```
  */
 export function addAttributeFallthrough(

@@ -1,7 +1,7 @@
 component Input()
-  - const { label } = props
-  - const { placeholder, ...restAttrs } = attrs
-  
+  - const { label } = $props
+  - const { placeholder, ...restAttrs } = $attrs
+
   .wrapper
     label= label
     input.field(placeholder=placeholder)&attributes(restAttrs)

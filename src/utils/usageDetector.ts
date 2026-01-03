@@ -11,11 +11,11 @@ import {
 } from './babelHelpers'
 
 /**
- * Detects which attributes are used from props/attrs in a component body
+ * Detects which attributes are used from $props/$attrs in a component body
  *
  * This function analyzes the component body to find:
- * - `const { ... } = props` statements
- * - `const { ... } = attrs` statements
+ * - `const { ... } = $props` statements
+ * - `const { ... } = $attrs` statements
  *
  * @param componentBody - The component body Block node
  * @returns ComponentUsage object with fromProps and fromAttrs arrays
@@ -23,8 +23,8 @@ import {
  * @example
  * // Component:
  * // component Card()
- * //   - const { title, count } = props
- * //   - const { class: className } = attrs
+ * //   - const { title, count } = $props
+ * //   - const { class: className } = $attrs
  *
  * detectAttributeUsage(componentBody)
  * // → { fromProps: ['title', 'count'], fromAttrs: ['class'] }
@@ -38,15 +38,15 @@ export function detectAttributeUsage(componentBody: Block): ComponentUsage {
     if (node.type === 'Code') {
       const code = node.val
 
-      // Detect which identifier (props or attrs) is being destructured from
+      // Detect which identifier ($props or $attrs) is being destructured from
       const source = detectDestructuringSource(code)
 
       if (source === 'props') {
-        // Extract variable names from props destructuring
+        // Extract variable names from $props destructuring
         const vars = extractDestructuredVars(code)
         fromProps.push(...vars)
       } else if (source === 'attrs') {
-        // Extract variable names from attrs destructuring
+        // Extract variable names from $attrs destructuring
         const vars = extractDestructuredVars(code)
         fromAttrs.push(...vars)
       }
@@ -118,6 +118,9 @@ export function isVariableReference(value: string): boolean {
   // Exclude null and undefined
   if (trimmed === 'null' || trimmed === 'undefined') return false
 
+  // Exclude pug-tail reserved identifiers
+  if (trimmed === '$props' || trimmed === '$attrs') return false
+
   // Exclude numeric literals (integers and floats)
   if (/^-?\d+(\.\d+)?$/.test(trimmed)) return false
 
@@ -156,7 +159,7 @@ export function createPropsCode(
   return [
     {
       type: 'Code',
-      val: `const props = {${pairs}}`,
+      val: `var $props = {${pairs}}`,
       buffer: false,
       mustEscape: false,
       isInline: false,
@@ -192,7 +195,7 @@ export function createAttrsCode(
   return [
     {
       type: 'Code',
-      val: `const attrs = {${pairs}}`,
+      val: `var $attrs = {${pairs}}`,
       buffer: false,
       mustEscape: false,
       isInline: false,

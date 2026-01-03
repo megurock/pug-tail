@@ -1,9 +1,9 @@
 component Inner()
-  - const { val } = props
+  - const { val } = $props
   p= val
 
 component Outer()
-  - const { data } = props
+  - const { data } = $props
   div
     Inner(val=data)
 

@@ -23,19 +23,19 @@ const traverse =
  * @returns Array of original property names (not renamed variables)
  *
  * @example
- * extractDestructuredVars("const { title } = props")
+ * extractDestructuredVars("const { title } = $props")
  * // → ['title']
  *
  * @example
- * extractDestructuredVars("const { title = 'Default' } = props")
+ * extractDestructuredVars("const { title = 'Default' } = $props")
  * // → ['title']
  *
  * @example
- * extractDestructuredVars("const { class: className } = attrs")
+ * extractDestructuredVars("const { class: className } = $attrs")
  * // → ['class']  ← Returns the original key name
  *
  * @example
- * extractDestructuredVars("const { title = 'Default', class: className = 'card' } = props")
+ * extractDestructuredVars("const { title = 'Default', class: className = 'card' } = $props")
  * // → ['title', 'class']
  */
 export function extractDestructuredVars(code: string): string[] {
@@ -116,22 +116,22 @@ function getPropertyKeyName(prop: ObjectProperty): string | null {
 }
 
 /**
- * Detects which identifier (props or attrs) is being destructured from
+ * Detects which identifier ($props or $attrs) is being destructured from
  *
  * @param code - JavaScript code string
  * @returns 'props', 'attrs', or null if neither
  *
  * @example
- * detectDestructuringSource("const { title } = props")
+ * detectDestructuringSource("const { title } = $props")
  * // → 'props'
  *
  * @example
- * detectDestructuringSource("const { class: className } = attrs")
+ * detectDestructuringSource("const { class: className } = $attrs")
  * // → 'attrs'
  *
  * @example
  * detectDestructuringSource("const { title } = attributes")
- * // → null (not props or attrs)
+ * // → null (not $props or $attrs)
  */
 export function detectDestructuringSource(
   code: string,
@@ -151,8 +151,10 @@ export function detectDestructuringSource(
           path.node.init?.type === 'Identifier'
         ) {
           const initName = path.node.init.name
-          if (initName === 'props' || initName === 'attrs') {
-            source = initName
+          if (initName === '$props') {
+            source = 'props'
+          } else if (initName === '$attrs') {
+            source = 'attrs'
           }
         }
       },

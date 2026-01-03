@@ -161,12 +161,12 @@ Card()
 
 ### Props/Attrs 分離（Phase 3）
 
-Vue 3 風の props と attrs の明確な分離をサポートします。
+Vue 3 風の $props と $attrs の明確な分離をサポートします。
 
 ```pug
 component Button()
-  - const { label, type = "button", disabled = false } = props
-  - const { class: className = "btn" } = attrs
+  - const { label, type = "button", disabled = false } = $props
+  - const { class: className = "btn" } = $attrs
   
   button(type=type disabled=disabled class=className)
     = label
@@ -183,11 +183,11 @@ Button(label="Cancel")
 - JavaScript 標準の分割代入構文のみを使用
 - デフォルト値のサポート（`count = 0`, `class: className = "card"`）
 - リネームのサポート（`class: className`）
-- 使用パターンから自動的に props/attrs を判別
+- 使用パターンから自動的に $props/$attrs を判別
 - Phase 2（`attributes`）との完全な後方互換性
 
 **動作原理**:
-1. Component 内で `const { title } = props` と宣言すると、pug-tail が「このComponentはpropsから title を使う」と解析
+1. Component 内で `const { title } = $props` と宣言すると、pug-tail が「このComponentは$propsから title を使う」と解析
 2. 呼び出し側で `Card(title="Hello", class="my-card")` とすると、自動的に分類
    - `title` → props（使用パターンに含まれる）
    - `class` → attrs（使用パターンに含まれない）
@@ -203,8 +203,8 @@ component Card()
 
 // Phase 3 スタイル（推奨）
 component Card()
-  - const { title } = props
-  - const { class: className } = attrs
+  - const { title } = $props
+  - const { class: className } = $attrs
   .card(class=className)
     h2= title
 ```
