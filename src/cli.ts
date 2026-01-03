@@ -574,12 +574,53 @@ async function main(): Promise<void> {
   }
 
   // Load configuration file
-  const configFile = await loadConfig(options.config)
+  const { config: configFile, configDir } = await loadConfig(options.config)
 
   // If no CLI args and no input in config, show help
   if (args.length === 0 && !configFile.files?.input) {
     showHelp()
     process.exit(0)
+  }
+
+  // Helper function to resolve paths relative to config file directory
+  const resolveConfigPath = (path: string): string => {
+    // If CLI option (not from config) or no config dir, use cwd
+    if (!configDir) {
+      return path
+    }
+    // Resolve relative to config directory
+    return resolve(configDir, path)
+  }
+
+  // Resolve config file paths relative to config directory
+  if (configDir && configFile) {
+    // Resolve input paths
+    if (configFile.files?.input) {
+      if (Array.isArray(configFile.files.input)) {
+        configFile.files.input = configFile.files.input.map(resolveConfigPath)
+      } else {
+        configFile.files.input = resolveConfigPath(configFile.files.input)
+      }
+    }
+    // Resolve output path
+    if (configFile.files?.output) {
+      configFile.files.output = resolveConfigPath(configFile.files.output)
+    }
+    // Resolve root path
+    if (configFile.files?.root) {
+      configFile.files.root = resolveConfigPath(configFile.files.root)
+    }
+    // Resolve basedir
+    if (configFile.basedir) {
+      configFile.basedir = resolveConfigPath(configFile.basedir)
+    }
+    // Resolve data path (only if it's a file path)
+    if (
+      typeof configFile.data === 'string' &&
+      !configFile.data.startsWith('{')
+    ) {
+      configFile.data = resolveConfigPath(configFile.data)
+    }
   }
 
   // Merge config file with CLI options (CLI options take precedence)

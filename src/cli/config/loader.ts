@@ -90,25 +90,29 @@ export async function loadConfigFile(
  * Load configuration from file or return default
  *
  * @param configPath - Optional explicit config file path
- * @returns Loaded configuration or empty object
+ * @returns Tuple of [loaded configuration, config directory]
  */
-export async function loadConfig(configPath?: string): Promise<PugTailConfig> {
+export async function loadConfig(
+  configPath?: string,
+): Promise<{ config: PugTailConfig; configDir: string | null }> {
   // Explicit config path provided
   if (configPath) {
     if (!existsSync(configPath)) {
       throw new Error(`Config file not found: ${configPath}`)
     }
-    return await loadConfigFile(configPath)
+    const config = await loadConfigFile(configPath)
+    return { config, configDir: dirname(resolve(configPath)) }
   }
 
   // Search for config file
   const foundConfig = findConfigFile()
   if (foundConfig) {
-    return await loadConfigFile(foundConfig)
+    const config = await loadConfigFile(foundConfig)
+    return { config, configDir: dirname(resolve(foundConfig)) }
   }
 
   // No config file found
-  return {}
+  return { config: {}, configDir: null }
 }
 
 /**

@@ -34,12 +34,15 @@ export interface PugTailConfig {
      * Files matching these patterns will be compiled and output.
      * Files not matching (or matching negation patterns) will be ignored.
      *
+     * @default ['**\/*.pug', '!**\/_*.pug', '!**\/*.component.pug', '!**\/components\/**\/*.pug']
+     *
      * @example
      * ```js
      * render: [
-     *   '**\/*.pug',                 // All .pug files
-     *   '!**\/components\/**\/*.pug',   // Exclude components directory
-     *   '!**\/_*.pug',                // Exclude files starting with _
+     *   '**\/*.pug',                    // All .pug files
+     *   '!**\/_*.pug',                  // Exclude files starting with _ (Pug standard)
+     *   '!**\/*.component.pug',         // Exclude component files by naming convention
+     *   '!**\/components\/**\/*.pug',     // Exclude components directory
      * ]
      * ```
      */

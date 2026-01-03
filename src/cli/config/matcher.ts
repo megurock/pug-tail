@@ -60,11 +60,13 @@ export function shouldIncludeFile(
  * Get default output patterns
  * Used when no config file is present
  *
- * @returns Default patterns (excludes _ files)
+ * @returns Default patterns (excludes components and _ prefixed files)
  */
 export function getDefaultOutputPatterns(): string[] {
   return [
     '**/*.pug', // All .pug files
-    '!**/_*.pug', // Exclude files starting with _
+    '!**/_*.pug', // Exclude files starting with _ (Pug standard)
+    '!**/*.component.pug', // Exclude component files by naming convention
+    '!**/components/**/*.pug', // Exclude components directory
   ]
 }
