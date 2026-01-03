@@ -116,7 +116,9 @@ export class FileProcessor {
 
     try {
       // Check if file should be processed based on config patterns
-      const basePath = rootPath || this.rootPath || process.cwd()
+      // Note: files.root is for output path structure, not for filtering
+      // Use process.cwd() as basePath for pattern matching
+      const basePath = process.cwd()
       const patterns =
         this.options.config?.files?.render || getDefaultOutputPatterns()
 
@@ -221,13 +223,9 @@ export class FileProcessor {
       )
 
       // Resolve output path
-      // Priority: parameter rootPath > config files.root > instance rootPath
-      const effectiveRootPath =
-        rootPath ||
-        (this.options.config?.files?.root
-          ? resolveAbsolutePath(this.options.config.files.root)
-          : undefined) ||
-        this.rootPath
+      // Priority: parameter rootPath > instance rootPath
+      // Note: config files.root is only for config file's input, not CLI arguments
+      const effectiveRootPath = rootPath || this.rootPath
 
       const pathOptions: PathResolverOptions = {
         outputDir: this.options.outputDir,
@@ -379,11 +377,9 @@ export class FileProcessor {
     const absoluteDir = resolveAbsolutePath(dirPath)
     const results: ProcessResult[] = []
 
-    // Priority: parameter rootPath > config files.root > directory itself
-    const configRoot = this.options.config?.files?.root
-      ? resolveAbsolutePath(this.options.config.files.root)
-      : undefined
-    const effectiveRootPath = rootPath || configRoot || absoluteDir
+    // Priority: parameter rootPath > directory itself
+    // Note: config files.root is only for config file's input, not CLI arguments
+    const effectiveRootPath = rootPath || absoluteDir
 
     try {
       const stat = lstatSync(absoluteDir)
@@ -448,10 +444,8 @@ export class FileProcessor {
   async processInputs(inputs: string[]): Promise<ProcessResult[]> {
     const results: ProcessResult[] = []
 
-    // Get root path from config if specified
-    const configRoot = this.options.config?.files?.root
-      ? resolveAbsolutePath(this.options.config.files.root)
-      : undefined
+    // Note: config files.root is only for config file's input, not CLI arguments
+    // When processing CLI arguments, we don't use config files.root
 
     for (const input of inputs) {
       const absolutePath = resolveAbsolutePath(input)
@@ -459,19 +453,16 @@ export class FileProcessor {
       try {
         // Check if it's a glob pattern
         if (input.includes('*') || input.includes('?') || input.includes('[')) {
-          // Use config root if specified, otherwise extract from glob pattern
-          let rootPath: string | undefined = configRoot
-          if (!rootPath) {
-            // Extract root path from glob pattern for maintaining directory structure
-            // For 'examples/**/*.pug', rootPath should be 'examples'
-            // For 'src/pages/**/*.pug', rootPath should be 'src/pages'
-            const globMatch = input.match(/^(.+?)(?:\*\*|\*)/)
-            if (globMatch?.[1]) {
-              // Remove trailing slashes
-              const extractedRoot = globMatch[1].replace(/[/\\]+$/, '')
-              if (extractedRoot) {
-                rootPath = resolveAbsolutePath(extractedRoot)
-              }
+          // Extract root path from glob pattern for maintaining directory structure
+          // For 'examples/**/*.pug', rootPath should be 'examples'
+          // For 'src/pages/**/*.pug', rootPath should be 'src/pages'
+          let rootPath: string | undefined
+          const globMatch = input.match(/^(.+?)(?:\*\*|\*)/)
+          if (globMatch?.[1]) {
+            // Remove trailing slashes
+            const extractedRoot = globMatch[1].replace(/[/\\]+$/, '')
+            if (extractedRoot) {
+              rootPath = resolveAbsolutePath(extractedRoot)
             }
           }
           const patternResults = await this.processPattern(input, rootPath)
@@ -483,13 +474,13 @@ export class FileProcessor {
         const stat = lstatSync(absolutePath)
 
         if (stat.isFile()) {
-          // Use config root if specified, otherwise use file's directory
-          const rootPath = configRoot || getDirectory(absolutePath)
+          // Use file's directory as root
+          const rootPath = getDirectory(absolutePath)
           const result = await this.processFile(absolutePath, rootPath)
           results.push(result)
         } else if (stat.isDirectory()) {
-          // Use config root if specified, otherwise use the directory itself
-          const rootPath = configRoot || absolutePath
+          // Use the directory itself as root
+          const rootPath = absolutePath
           const dirResults = await this.processDirectory(absolutePath, rootPath)
           results.push(...dirResults)
         }

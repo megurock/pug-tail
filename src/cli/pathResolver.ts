@@ -61,14 +61,17 @@ export function resolveOutputPath(
     return outputPath
   }
 
+  // Resolve outputDir to absolute path
+  const absoluteOutputDir = resolve(outputDir)
+
   // If rootPath is provided, maintain directory structure
   if (rootPath) {
     const relativePath = relative(rootPath, outputPath)
-    return resolve(outputDir, relativePath)
+    return resolve(absoluteOutputDir, relativePath)
   }
 
   // Otherwise, just use the basename
-  return resolve(outputDir, basename(outputPath))
+  return resolve(absoluteOutputDir, basename(outputPath))
 }
 
 /**

@@ -391,6 +391,13 @@ function processSingleFile(options: CLIOptions): void {
   // Parse frontmatter
   const { data: frontmatterData, content, dataFiles } = parseFrontmatter(source)
 
+  if (options.debug) {
+    console.log('[pug-tail] Frontmatter parsed:', {
+      dataFiles,
+      frontmatterData,
+    })
+  }
+
   // Load data from "@dataFiles" directive
   let dataFilesData: Record<string, unknown> = {}
   if (dataFiles.length > 0) {
@@ -427,6 +434,10 @@ function processSingleFile(options: CLIOptions): void {
 
   // Merge data: CLI -O → @dataFiles → frontmatter direct
   const mergedData = mergeData(data, dataFilesData, frontmatterData)
+
+  if (options.debug) {
+    console.log('[pug-tail] Merged data:', JSON.stringify(mergedData, null, 2))
+  }
 
   const transformOptions: TransformOptions = {
     filename: input,
@@ -507,15 +518,36 @@ function processSingleFile(options: CLIOptions): void {
 async function processMultipleFiles(
   options: CLIOptions,
   config?: PugTailConfig,
+  originalConfig?: PugTailConfig,
 ): Promise<void> {
   // Load data if provided (CLI -O takes precedence over config.data)
+  // If CLI inputs are specified, ignore config.data (it's only for config file's input)
   let data: Record<string, unknown> | undefined
-  const dataSource = options.obj || config?.data
-  const basedir = config?.basedir || options.basedir
+  const hasCliInputs = options.inputs && options.inputs.length > 0
+  // Only use config.data if no CLI inputs are specified (config.data is for config file's input)
+  // If options.obj is explicitly undefined (not just missing), don't use config.data
+  // Also check if config.data is explicitly undefined (set by configForProcessor)
+  // Note: config?.data === undefined means it was explicitly set to undefined (not just missing)
+  const dataSource =
+    options.obj !== undefined
+      ? options.obj
+      : hasCliInputs ||
+          (config && 'data' in config && config.data === undefined)
+        ? undefined
+        : config?.data
+  // For config.data, use originalConfig.basedir or process.cwd() (not CLI basedir or merged config basedir)
+  // For CLI -O, use process.cwd() (CLI basedir is for Pug includes, not data files)
+  const dataBasedir = options.obj
+    ? process.cwd()
+    : dataSource && typeof dataSource === 'string' && originalConfig
+      ? originalConfig.basedir
+        ? resolve(process.cwd(), originalConfig.basedir)
+        : process.cwd()
+      : process.cwd()
   if (dataSource) {
     try {
       if (typeof dataSource === 'string') {
-        data = loadData(dataSource, basedir)
+        data = loadData(dataSource, dataBasedir)
       } else {
         data = dataSource
       }
@@ -533,8 +565,8 @@ async function processMultipleFiles(
   }
 
   const processor = new FileProcessor({
-    outputDir: options.output,
-    extension: options.extension,
+    outputDir: options.output || config?.files?.output,
+    extension: options.extension || config?.extension,
     transformOptions: {
       debug: options.debug ?? false,
       output: options.format ?? 'html',
@@ -606,6 +638,12 @@ async function main(): Promise<void> {
     cliConfig.files = {}
     if (options.inputs.length > 0) {
       cliConfig.files.input = options.inputs
+      // If CLI inputs are specified, ignore config file's render patterns
+      // (they are only for config file's input)
+      // Use default patterns unless --render-files is explicitly specified
+      if (!options.renderFiles) {
+        cliConfig.files.render = undefined
+      }
     }
     if (options.output) {
       cliConfig.files.output = options.output
@@ -740,6 +778,7 @@ async function main(): Promise<void> {
     await new Promise(() => {})
   } else if (useSingleFileMode(options)) {
     // For single file mode, merge config but CLI options take precedence
+    // Don't use config.data if CLI inputs are specified (config.data is for config file's input)
     const singleFileOptions: CLIOptions = {
       ...options,
       output: options.output || mergedConfig.files?.output,
@@ -752,18 +791,27 @@ async function main(): Promise<void> {
       silent: options.silent ?? mergedConfig.silent,
       obj:
         options.obj ||
-        (typeof mergedConfig.data === 'string' ? mergedConfig.data : undefined),
+        (options.inputs.length > 0
+          ? undefined
+          : typeof mergedConfig.data === 'string'
+            ? mergedConfig.data
+            : undefined),
     }
     processSingleFile(singleFileOptions)
   } else {
     // Use merged config for multiple files mode
     // Create merged options from config and CLI
+    // Don't use config.data if CLI inputs are specified (config.data is for config file's input)
     const mergedOptions: CLIOptions = {
       inputs,
-      output: mergedConfig.files?.output,
+      output: mergedConfig.files?.output || options.output,
       obj:
         options.obj ||
-        (typeof mergedConfig.data === 'string' ? mergedConfig.data : undefined),
+        (inputs.length > 0
+          ? undefined
+          : typeof mergedConfig.data === 'string'
+            ? mergedConfig.data
+            : undefined),
       basedir: mergedConfig.basedir,
       format: mergedConfig.format,
       extension: mergedConfig.extension,
@@ -773,7 +821,16 @@ async function main(): Promise<void> {
       silent: mergedConfig.silent,
     }
 
-    await processMultipleFiles(mergedOptions, mergedConfig)
+    // Pass merged config but remove data if CLI inputs are specified
+    // (config.data is only for config file's input, not CLI arguments)
+    const configForProcessor =
+      inputs.length > 0
+        ? (() => {
+            const { data, ...rest } = mergedConfig
+            return rest
+          })()
+        : mergedConfig
+    await processMultipleFiles(mergedOptions, configForProcessor, configFile)
   }
 }
 
