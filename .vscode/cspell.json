@@ -1,7 +1,7 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": ["frontmatter", "nodir"],
+  "words": ["frontmatter", "nodir", "pugtailrc"],
   "flagWords": [],
   "ignorePaths": [
     "node_modules",

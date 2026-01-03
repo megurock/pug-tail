@@ -1,13 +1,8 @@
+---
+"@dataFiles":
+  - ../data/navigation.json
+---
+
 include ../components/Layout.pug
-include ../components/Card.pug
 
-component IndexPage()
-  Layout()
-    slot(main)
-      body
-        h1= siteName
-        p Lorem ipsum dolor sit amet.
-        Card#someId.foo(title="Bye" count=5 class="bar")
-
-//- Do not forget to call the component.
-IndexPage()
+Layout(navigation=navigation)

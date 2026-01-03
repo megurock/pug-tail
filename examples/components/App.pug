@@ -6,9 +6,9 @@ include ./Card.pug
 component App()
   Layout()
     slot(head)
-      title PugTail Example
+      title= siteName
     slot(header)
-      Header()
+      Header(navigation=navigation)
     slot(main)
       body
         h1 Hello, World!

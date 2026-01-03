@@ -1,10 +1,10 @@
 pre-commit:
   parallel: true
   commands:
-    check:
-      run: npm run check
-    check:types:
-      run: npm run check:types
+    fix:
+      run: npm run fix
+    test:
+      run: npm test
 
 commit-msg:
   commands:

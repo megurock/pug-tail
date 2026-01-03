@@ -2,13 +2,14 @@ include ./Header.pug
 include ./Footer.pug
 
 component Layout()
+  - const { navigation } = props
   html(lang="ja")
     head
       meta(charset="UTF-8")
       slot(head)
     body
       slot(header)
-        Header()
+        Header(navigation=navigation)
       slot(main)
         p Main content goes here.
       slot(footer)
