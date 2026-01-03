@@ -35,21 +35,16 @@ describe('Phase 3.5: Dynamic data in component attributes', () => {
         'utf-8',
       )
 
-      // Remove frontmatter for test
-      const content = source.replace(/^---\n[\s\S]*?\n---\n/, '')
-
-      const data = {
-        navigation: [
-          { label: 'Home', url: '/' },
-          { label: 'About', url: '/about' },
-        ],
-      }
-
       // Phase 4: TDZ issue is now resolved with IIFE wrapper
       // Same-name variable passing (navigation=navigation) now works
-      const result = transform(content, {
+      const result = transform(source, {
         output: 'html',
-        data,
+        data: {
+          navigation: [
+            { label: 'Home', url: '/' },
+            { label: 'About', url: '/about' },
+          ],
+        },
       })
 
       expect(result.html).toBeDefined()

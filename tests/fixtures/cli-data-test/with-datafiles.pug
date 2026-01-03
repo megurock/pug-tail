@@ -1,13 +1,9 @@
----
-title: Page with Data Files
-"@dataFiles":
-  - data/common.json
-  - data/about.json
----
+- const $dataFiles = ['data/common.json', 'data/about.json']
+
 doctype html
 html
   head
-    title= title
+    title Page with Data Files
   body
     h1= pageTitle
     p= description

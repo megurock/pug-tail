@@ -20,8 +20,6 @@ import {
   shouldIncludeFile,
 } from './config/matcher.js'
 import type { PugTailConfig } from './config/types.js'
-import { mergeData } from './dataLoader.js'
-import { parseFrontmatter } from './frontmatterParser.js'
 import {
   getDirectory,
   isPugFile,
@@ -162,68 +160,9 @@ export class FileProcessor {
         )
       }
 
-      // Parse frontmatter
-      const {
-        data: frontmatterData,
-        content,
-        dataFiles,
-      } = parseFrontmatter(source)
-
-      if (this.options.debug) {
-        this.log(
-          `After frontmatter parse (${content.length} chars):\n${content.substring(0, 200)}...`,
-        )
-      }
-
-      // Load data from "@dataFiles" directive
-      let dataFilesData: Record<string, unknown> = {}
-      if (dataFiles.length > 0) {
-        for (const dataFile of dataFiles) {
-          try {
-            // Resolve path: absolute (from basedir) or relative (from input file)
-            let dataFilePath: string
-            if (dataFile.startsWith('/')) {
-              // Absolute path from basedir
-              if (this.options.transformOptions?.basedir) {
-                dataFilePath = resolve(
-                  this.options.transformOptions.basedir,
-                  dataFile.slice(1),
-                )
-              } else {
-                throw new Error(
-                  `Absolute path "${dataFile}" requires basedir option (-b, --basedir)`,
-                )
-              }
-            } else {
-              // Relative path from input file
-              const inputDir = getDirectory(absoluteInput)
-              dataFilePath = resolve(inputDir, dataFile)
-            }
-
-            const fileData = JSON.parse(readFileSync(dataFilePath, 'utf-8'))
-            dataFilesData = mergeData(dataFilesData, fileData)
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : String(error)
-            if (!this.options.silent) {
-              console.error(
-                `Error loading data file "${dataFile}":`,
-                errorMessage,
-              )
-            }
-            throw new Error(
-              `Failed to load data file "${dataFile}": ${errorMessage}`,
-            )
-          }
-        }
-      }
-
-      // Merge data: CLI -O → @dataFiles → frontmatter direct
-      const mergedData = mergeData(
-        this.options.data,
-        dataFilesData,
-        frontmatterData,
-      )
+      // Resolve base path for $dataFiles (relative to input file)
+      const inputDir = getDirectory(absoluteInput)
+      const dataFilesBasePath = inputDir
 
       // Resolve output path
       // Priority: parameter rootPath > instance rootPath
@@ -237,11 +176,12 @@ export class FileProcessor {
       }
       const outputPath = resolveOutputPath(absoluteInput, pathOptions)
 
-      // Transform (use cleaned content without frontmatter)
-      const result = transform(content, {
+      // Transform (with basePath for $dataFiles resolution)
+      const result = transform(source, {
         filename: absoluteInput,
         ...this.options.transformOptions,
-        data: mergedData,
+        basePath: dataFilesBasePath,
+        data: this.options.data,
       })
 
       // Get output content

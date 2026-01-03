@@ -253,13 +253,12 @@ describe('CLI Integration Tests', () => {
       expect(output).toContain('<li>frontmatter</li>')
     })
 
-    it('should merge frontmatter with CLI data (frontmatter wins)', () => {
-      // Create temp data with conflicting values
+    it('should merge inline data with CLI data', () => {
+      // Create temp data
       const tempDataPath = join(TEST_OUTPUT_DIR, 'temp-conflict-data.json')
       const tempData = {
-        title: 'CLI Title', // Should be overridden
-        siteName: 'Test Site', // Should be available
-        year: 2024, // Should be overridden by frontmatter
+        siteName: 'Test Site',
+        year: 2024,
       }
       writeFileSync(tempDataPath, JSON.stringify(tempData), 'utf-8')
 
@@ -277,14 +276,15 @@ describe('CLI Integration Tests', () => {
         join(TEST_OUTPUT_DIR, 'with-override.html'),
         'utf-8',
       )
-      // Frontmatter values should win
+      // Pug inline constants
       expect(output).toContain('<title>Override Title</title>')
       expect(output).toContain('From frontmatter')
-      // CLI data should be available when not in frontmatter
+      // CLI data
       expect(output).toContain('Site: Test Site')
+      expect(output).toContain('Year: 2024')
     })
 
-    it('should load data from @dataFiles directive', () => {
+    it('should load data from $dataFiles directive', () => {
       const result = runCLI([
         'tests/fixtures/cli-data-test/with-datafiles.pug',
         '-o',
@@ -297,18 +297,16 @@ describe('CLI Integration Tests', () => {
         join(TEST_OUTPUT_DIR, 'with-datafiles.html'),
         'utf-8',
       )
-      // Frontmatter data
-      expect(output).toContain('<title>Page with Data Files</title>')
       // From common.json
       expect(output).toContain('Test Site')
       expect(output).toContain('Common site data')
       expect(output).toContain('© 2025 Test Site')
       // From about.json
       expect(output).toContain('About Us Page')
-      expect(output).toContain('This is loaded from page-specific data file')
+      expect(output).toContain('page-specific data file')
     })
 
-    it('should merge CLI data, @dataFiles, and frontmatter correctly', () => {
+    it('should merge CLI data and $dataFiles correctly', () => {
       const tempDataPath = join(TEST_OUTPUT_DIR, 'temp-cli-data.json')
       const tempData = {
         cliValue: 'From CLI',
@@ -330,9 +328,8 @@ describe('CLI Integration Tests', () => {
         join(TEST_OUTPUT_DIR, 'with-merge.html'),
         'utf-8',
       )
-      // All three sources should be available
-      expect(output).toContain('Page with Data Files') // frontmatter
-      expect(output).toContain('Test Site') // @dataFiles
+      // CLI and $dataFiles data should be available
+      expect(output).toContain('Test Site') // $dataFiles
     })
   })
 

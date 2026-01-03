@@ -9,11 +9,16 @@ import generateCode from 'pug-code-gen'
 import lex from 'pug-lexer'
 import load from 'pug-load'
 import parse from 'pug-parser'
+import { dataLoader } from '@/cli/dataLoader.js'
 import { ASTTransformer } from '@/core/astTransformer.js'
 import { ComponentRegistry } from '@/core/componentRegistry.js'
 import type { ErrorHandlerOptions } from '@/core/errorHandler.js'
 import { SlotResolver } from '@/core/slotResolver.js'
 import type { Block, Node } from '@/types/pug'
+import {
+  detectDataFiles,
+  removeDataFilesDeclaration,
+} from '@/utils/dataFilesDetector.js'
 
 /**
  * Transform options
@@ -37,6 +42,9 @@ export interface TransformOptions extends ErrorHandlerOptions {
 
   /** Base directory for absolute includes (required for absolute paths) */
   basedir?: string
+
+  /** Base path for resolving data files */
+  basePath?: string
 
   /** Data to inject into the template (available as locals) */
   data?: Record<string, unknown>
@@ -77,6 +85,7 @@ export function transform(
     debug = false,
     output = 'ast',
     htmlOptions = {},
+    basePath,
     ...errorHandlerOptions
   } = options
 
@@ -133,6 +142,36 @@ export function transform(
     )
   }
 
+  // 2.7. Detect and load $dataFiles
+  let mergedData = options.data || {}
+  try {
+    const dataFilePaths = detectDataFiles(ast as Block)
+    if (dataFilePaths.length > 0) {
+      if (debug) {
+        console.log('[pug-tail] Detected $dataFiles:', dataFilePaths)
+        console.log('[pug-tail] basePath:', basePath)
+      }
+      const dataFromFiles = dataLoader.loadDataFiles(dataFilePaths, basePath)
+      if (debug) {
+        console.log('[pug-tail] Loaded data from files:', dataFromFiles)
+      }
+      // Merge data: CLI options < dataFiles
+      mergedData = {
+        ...mergedData,
+        ...dataFromFiles,
+      }
+      // Remove $dataFiles declaration from AST
+      removeDataFilesDeclaration(ast as Block)
+      if (debug) {
+        console.log('[pug-tail] Loaded and removed $dataFiles declaration')
+      }
+    }
+  } catch (error) {
+    throw new Error(
+      `Loading $dataFiles failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+
   // 3. Transformation (expand components and slots)
   const registry = new ComponentRegistry(errorHandlerOptions)
   const resolver = new SlotResolver(errorHandlerOptions)
@@ -164,7 +203,7 @@ export function transform(
       pretty: htmlOptions.pretty ?? true,
       compileDebug: htmlOptions.compileDebug ?? false,
       doctype: htmlOptions.doctype,
-      data: options.data,
+      data: mergedData,
     })
     if (debug) {
       console.log('[pug-tail] Generated HTML:', result.html)

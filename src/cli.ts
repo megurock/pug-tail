@@ -439,6 +439,9 @@ function processSingleFile(options: CLIOptions): void {
     console.log('[pug-tail] Merged data:', JSON.stringify(mergedData, null, 2))
   }
 
+  // Resolve basePath for $dataFiles (relative to input file)
+  const inputDir = dirname(resolve(process.cwd(), input))
+
   const transformOptions: TransformOptions = {
     filename: input,
     debug: options.debug ?? false,
@@ -450,6 +453,7 @@ function processSingleFile(options: CLIOptions): void {
     },
     data: mergedData,
     basedir: options.basedir,
+    basePath: inputDir,
   }
 
   try {

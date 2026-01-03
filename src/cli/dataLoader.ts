@@ -102,3 +102,39 @@ export function mergeData(
 
   return result
 }
+
+/**
+ * Data loader class for loading JSON files
+ */
+class DataLoader {
+  /**
+   * Load data from JSON files
+   *
+   * @param filePaths - Array of file paths to load
+   * @param basePath - Base directory for resolving relative paths
+   * @returns Merged data from all files
+   */
+  loadDataFiles(
+    filePaths: string[],
+    basePath?: string,
+  ): Record<string, unknown> {
+    const mergedData: Record<string, unknown> = {}
+
+    for (const filePath of filePaths) {
+      try {
+        const data = loadData(filePath, basePath)
+        Object.assign(mergedData, data)
+      } catch (error) {
+        console.warn(
+          `Warning: Failed to load data file "${filePath}": ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        )
+      }
+    }
+
+    return mergedData
+  }
+}
+
+export const dataLoader = new DataLoader()
