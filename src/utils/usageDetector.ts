@@ -105,55 +105,128 @@ function walkNodes(
 }
 
 /**
+ * Checks if a value is a JavaScript variable reference (not a literal)
+ * @param value - The value to check
+ * @returns true if it looks like a variable reference
+ */
+export function isVariableReference(value: string): boolean {
+  const trimmed = value.trim()
+
+  // Exclude boolean literals
+  if (trimmed === 'true' || trimmed === 'false') return false
+
+  // Exclude null and undefined
+  if (trimmed === 'null' || trimmed === 'undefined') return false
+
+  // Exclude numeric literals (integers and floats)
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) return false
+
+  // Exclude string literals (single or double quotes)
+  if (/^["'].*["']$/.test(trimmed)) return false
+
+  // Exclude template literals
+  if (/^`.*`$/.test(trimmed)) return false
+
+  // Valid variable name pattern
+  return /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(trimmed)
+}
+
+/**
  * Creates JavaScript code for props object
+ * Simple object literal - TDZ handling is done at the block level
  *
  * @param props - Map of property names to values
- * @returns Code node with `const props = {...}` statement
- *
- * @example
- * createPropsCode(new Map([['title', '"Hello"'], ['count', '5']]))
- * // → { type: 'Code', val: 'const props = {"title": "Hello", "count": 5}', ... }
+ * @param paramPrefix - Optional prefix for renamed parameters (for TDZ avoidance)
+ * @returns Array of Code nodes for props initialization
  */
-export function createPropsCode(props: Map<string, string>): Code {
+export function createPropsCode(
+  props: Map<string, string>,
+  paramPrefix?: string,
+): Code[] {
   const pairs = Array.from(props.entries())
-    .map(([key, value]) => `"${key}": ${value}`)
+    .map(([key, value]) => {
+      // If paramPrefix is provided and value is a variable reference, use renamed param
+      if (paramPrefix && isVariableReference(value)) {
+        return `"${key}": ${paramPrefix}${value.trim()}`
+      }
+      return `"${key}": ${value}`
+    })
     .join(', ')
 
-  return {
-    type: 'Code',
-    val: `const props = {${pairs}}`,
-    buffer: false,
-    mustEscape: false,
-    isInline: false,
-    line: 0,
-    column: 0,
-    filename: '',
-  }
+  return [
+    {
+      type: 'Code',
+      val: `const props = {${pairs}}`,
+      buffer: false,
+      mustEscape: false,
+      isInline: false,
+      line: 0,
+      column: 0,
+      filename: '',
+    },
+  ]
 }
 
 /**
  * Creates JavaScript code for attrs object
+ * Simple object literal - TDZ handling is done at the block level
  *
  * @param attrs - Map of attribute names to values
- * @returns Code node with `const attrs = {...}` statement
- *
- * @example
- * createAttrsCode(new Map([['class', '"my-card"'], ['id', '"card-1"']]))
- * // → { type: 'Code', val: 'const attrs = {"class": "my-card", "id": "card-1"}', ... }
+ * @param paramPrefix - Optional prefix for renamed parameters (for TDZ avoidance)
+ * @returns Array of Code nodes for attrs initialization
  */
-export function createAttrsCode(attrs: Map<string, string>): Code {
+export function createAttrsCode(
+  attrs: Map<string, string>,
+  paramPrefix?: string,
+): Code[] {
   const pairs = Array.from(attrs.entries())
-    .map(([key, value]) => `"${key}": ${value}`)
+    .map(([key, value]) => {
+      // If paramPrefix is provided and value is a variable reference, use renamed param
+      if (paramPrefix && isVariableReference(value)) {
+        return `"${key}": ${paramPrefix}${value.trim()}`
+      }
+      return `"${key}": ${value}`
+    })
     .join(', ')
 
-  return {
-    type: 'Code',
-    val: `const attrs = {${pairs}}`,
-    buffer: false,
-    mustEscape: false,
-    isInline: false,
-    line: 0,
-    column: 0,
-    filename: '',
+  return [
+    {
+      type: 'Code',
+      val: `const attrs = {${pairs}}`,
+      buffer: false,
+      mustEscape: false,
+      isInline: false,
+      line: 0,
+      column: 0,
+      filename: '',
+    },
+  ]
+}
+
+/**
+ * Extracts all variable references from props and attrs maps
+ *
+ * @param props - Map of property names to values
+ * @param attrs - Map of attribute names to values
+ * @returns Set of variable names that are referenced
+ */
+export function extractReferencedVariables(
+  props: Map<string, string>,
+  attrs: Map<string, string>,
+): Set<string> {
+  const vars = new Set<string>()
+
+  for (const value of props.values()) {
+    if (isVariableReference(value)) {
+      vars.add(value.trim())
+    }
   }
+
+  for (const value of attrs.values()) {
+    if (isVariableReference(value)) {
+      vars.add(value.trim())
+    }
+  }
+
+  return vars
 }

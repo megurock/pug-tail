@@ -38,6 +38,7 @@ import {
   createAttrsCode,
   createPropsCode,
   detectAttributeUsage,
+  extractReferencedVariables,
 } from '@/utils/usageDetector'
 import type { ComponentRegistry } from './componentRegistry'
 import { ErrorHandler, type ErrorHandlerOptions } from './errorHandler'
@@ -264,6 +265,7 @@ export class ASTTransformer {
 
       // Phase 2/3: Extract and inject attributes
       const attributes = extractAttributes(callNode as Tag)
+
       this.injectAttributes(componentBodyCopy, attributes, component)
 
       const result = this.replaceSlots(
@@ -480,44 +482,94 @@ export class ASTTransformer {
     if (component.usage) {
       const { props, attrs } = categorizeAttributes(attributes, component.usage)
 
-      // Wrap in block scope to prevent variable conflicts
-      // Start block
-      const blockStart: Code = {
-        type: 'Code',
-        val: '{',
-        buffer: false,
-        mustEscape: false,
-        isInline: false,
-        line: 0,
-        column: 0,
-        filename: '',
+      // Phase 4: Extract all referenced variables for TDZ avoidance
+      const referencedVars = extractReferencedVariables(props, attrs)
+      const paramPrefix = referencedVars.size > 0 ? '__pug_arg_' : undefined
+
+      // Phase 3.5/4: Create props/attrs code with renamed parameters
+      const propsCodes = createPropsCode(props, paramPrefix)
+      const attrsCodes = createAttrsCode(attrs, paramPrefix)
+
+      // If there are referenced variables, wrap in IIFE for TDZ avoidance
+      if (referencedVars.size > 0) {
+        // IIFE pattern: ((__pug_arg_var1, __pug_arg_var2) => { ... })(var1, var2)
+        const paramNames = Array.from(referencedVars).map(
+          (v) => `__pug_arg_${v}`,
+        )
+        const argNames = Array.from(referencedVars)
+
+        const iifeStart: Code = {
+          type: 'Code',
+          val: `((${paramNames.join(', ')}) => {`,
+          buffer: false,
+          mustEscape: false,
+          isInline: false,
+          line: 0,
+          column: 0,
+          filename: '',
+        }
+
+        const iifeEnd: Code = {
+          type: 'Code',
+          val: `})(${argNames.join(', ')})`,
+          buffer: false,
+          mustEscape: false,
+          isInline: false,
+          line: 0,
+          column: 0,
+          filename: '',
+        }
+
+        // Insert codes in reverse order (unshift adds to front)
+        for (let i = attrsCodes.length - 1; i >= 0; i--) {
+          const code = attrsCodes[i]
+          if (code) componentBody.nodes.unshift(code)
+        }
+        for (let i = propsCodes.length - 1; i >= 0; i--) {
+          const code = propsCodes[i]
+          if (code) componentBody.nodes.unshift(code)
+        }
+        componentBody.nodes.unshift(iifeStart)
+        componentBody.nodes.push(iifeEnd)
+      } else {
+        // No referenced variables, use simple block scope
+        const blockStart: Code = {
+          type: 'Code',
+          val: '{',
+          buffer: false,
+          mustEscape: false,
+          isInline: false,
+          line: 0,
+          column: 0,
+          filename: '',
+        }
+
+        const blockEnd: Code = {
+          type: 'Code',
+          val: '}',
+          buffer: false,
+          mustEscape: false,
+          isInline: false,
+          line: 0,
+          column: 0,
+          filename: '',
+        }
+
+        // Insert codes in reverse order (unshift adds to front)
+        for (let i = attrsCodes.length - 1; i >= 0; i--) {
+          const code = attrsCodes[i]
+          if (code) componentBody.nodes.unshift(code)
+        }
+        for (let i = propsCodes.length - 1; i >= 0; i--) {
+          const code = propsCodes[i]
+          if (code) componentBody.nodes.unshift(code)
+        }
+        componentBody.nodes.unshift(blockStart)
+        componentBody.nodes.push(blockEnd)
       }
-
-      // Create props/attrs Code nodes
-      const propsCode = createPropsCode(props)
-      const attrsCode = createAttrsCode(attrs)
-
-      // End block
-      const blockEnd: Code = {
-        type: 'Code',
-        val: '}',
-        buffer: false,
-        mustEscape: false,
-        isInline: false,
-        line: 0,
-        column: 0,
-        filename: '',
-      }
-
-      // Insert at the beginning
-      componentBody.nodes.unshift(attrsCode)
-      componentBody.nodes.unshift(propsCode)
-      componentBody.nodes.unshift(blockStart)
-
-      // Insert at the end
-      componentBody.nodes.push(blockEnd)
     } else {
       // Phase 2: No usage patterns, inject attributes object (backward compatible)
+      // Phase 3.5: No void() needed - createAttributesCode will handle variable references
       const attributesCode = createAttributesCode(attributes)
       componentBody.nodes.unshift(attributesCode)
     }
