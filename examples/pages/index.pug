@@ -1,10 +1,7 @@
----
-"@dataFiles":
-  - ../data/navigation.json
----
-
 include ../components/Layout.pug
 include ../components/Card.pug
+
+- const $dataFiles = ['/data/navigation.json']
 
 Layout(navigation=navigation)
   slot(main)

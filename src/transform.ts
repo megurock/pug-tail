@@ -150,8 +150,13 @@ export function transform(
       if (debug) {
         console.log('[pug-tail] Detected $dataFiles:', dataFilePaths)
         console.log('[pug-tail] basePath:', basePath)
+        console.log('[pug-tail] basedir:', options.basedir)
       }
-      const dataFromFiles = dataLoader.loadDataFiles(dataFilePaths, basePath)
+      const dataFromFiles = dataLoader.loadDataFiles(
+        dataFilePaths,
+        basePath,
+        options.basedir,
+      )
       if (debug) {
         console.log('[pug-tail] Loaded data from files:', dataFromFiles)
       }

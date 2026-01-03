@@ -108,21 +108,28 @@ export function mergeData(
  */
 class DataLoader {
   /**
-   * Load data from JSON files
+   * Loads data from multiple file paths and merges them.
    *
    * @param filePaths - Array of file paths to load
    * @param basePath - Base directory for resolving relative paths
+   * @param basedir - Base directory for resolving absolute paths (paths starting with /)
    * @returns Merged data from all files
    */
   loadDataFiles(
     filePaths: string[],
     basePath?: string,
+    basedir?: string,
   ): Record<string, unknown> {
     const mergedData: Record<string, unknown> = {}
 
     for (const filePath of filePaths) {
       try {
-        const data = loadData(filePath, basePath)
+        // If path starts with /, use basedir; otherwise use basePath
+        const resolveBase = filePath.startsWith('/') ? basedir : basePath
+        const normalizedPath = filePath.startsWith('/')
+          ? filePath.slice(1) // Remove leading /
+          : filePath
+        const data = loadData(normalizedPath, resolveBase)
         Object.assign(mergedData, data)
       } catch (error) {
         console.warn(

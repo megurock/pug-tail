@@ -331,6 +331,30 @@ describe('CLI Integration Tests', () => {
       // CLI and $dataFiles data should be available
       expect(output).toContain('Test Site') // $dataFiles
     })
+
+    it('should load absolute path $dataFiles with basedir', () => {
+      const result = runCLI([
+        'tests/fixtures/cli-data-test/with-absolute-datafiles.pug',
+        '-o',
+        join(TEST_OUTPUT_DIR, 'with-absolute-datafiles.html'),
+        '-b',
+        'tests/fixtures/cli-data-test',
+      ])
+
+      expect(result.exitCode).toBe(0)
+
+      const output = readFileSync(
+        join(TEST_OUTPUT_DIR, 'with-absolute-datafiles.html'),
+        'utf-8',
+      )
+      // From common.json
+      expect(output).toContain('Test Site')
+      expect(output).toContain('Common site data')
+      expect(output).toContain('© 2025 Test Site')
+      // From about.json
+      expect(output).toContain('About Us Page')
+      expect(output).toContain('page-specific data file')
+    })
   })
 
   describe('Basedir support', () => {
