@@ -814,7 +814,12 @@ async function main(): Promise<void> {
 }
 
 // Run main only when executed as a CLI.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if this is the main module (handles both direct execution and symlinks)
+const isMainModule =
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.includes('node_modules/.bin/pug-tail')
+
+if (isMainModule) {
   main().catch((error) => {
     console.error('Fatal error:', error)
     process.exit(1)
