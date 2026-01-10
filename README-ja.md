@@ -77,15 +77,19 @@ Card()
 
 ## 📦 インストール
 
+**Alpha Release** - 現在アルファテスト中：
+
 ```bash
-npm install pug-tail
+npm install pug-tail@alpha
 ```
 
 または
 
 ```bash
-yarn add pug-tail
+yarn add pug-tail@alpha
 ```
+
+> **注意**: これはアルファ版です。最新のアルファ版をインストールするには `@alpha` タグを使用してください。
 
 ## 🚀 クイックスタート
 

@@ -77,15 +77,19 @@ Card()
 
 ## 📦 Installation
 
+**Alpha Release** - Currently in alpha testing:
+
 ```bash
-npm install pug-tail
+npm install pug-tail@alpha
 ```
 
 or
 
 ```bash
-yarn add pug-tail
+yarn add pug-tail@alpha
 ```
+
+> **Note**: This is an alpha release. Use `@alpha` tag to install the latest alpha version.
 
 ## 🚀 Quick Start
 
