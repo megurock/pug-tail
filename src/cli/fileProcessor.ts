@@ -286,6 +286,7 @@ export class FileProcessor {
       ignore: ['node_modules/**', '.git/**'],
       nodir: true,
       absolute: true,
+      posix: true, // Use forward slashes for cross-platform compatibility
     })
 
     if (files.length === 0) {

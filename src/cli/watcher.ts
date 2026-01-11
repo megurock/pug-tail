@@ -4,7 +4,7 @@
  * @module cli/watcher
  */
 
-import chokidar from 'chokidar'
+import chokidar, { type FSWatcher } from 'chokidar'
 import { glob } from 'glob'
 import { DependencyTracker } from './dependencyTracker.js'
 import { FileProcessor, type FileProcessorOptions } from './fileProcessor.js'
@@ -26,7 +26,7 @@ export interface WatchOptions extends FileProcessorOptions {
 export class Watcher {
   private options: WatchOptions
   private processor: FileProcessor
-  private watcher?: chokidar.FSWatcher
+  private watcher?: FSWatcher
   private debounceTimers: Map<string, NodeJS.Timeout> = new Map()
   private dependencyTracker: DependencyTracker
 
@@ -87,6 +87,7 @@ export class Watcher {
       ignore: ['node_modules/**', '.git/**'],
       nodir: true,
       absolute: true,
+      posix: true, // Use forward slashes for cross-platform compatibility
     })
 
     if (debug) {
@@ -116,10 +117,10 @@ export class Watcher {
     })
 
     this.watcher
-      .on('add', (path) => this.handleFileAdded(path))
-      .on('change', (path) => this.handleFileChanged(path))
-      .on('unlink', (path) => this.handleFileDeleted(path))
-      .on('error', (error) => this.handleError(error))
+      .on('add', (path: string) => this.handleFileAdded(path))
+      .on('change', (path: string) => this.handleFileChanged(path))
+      .on('unlink', (path: string) => this.handleFileDeleted(path))
+      .on('error', (error: unknown) => this.handleError(error as Error))
 
     if (!this.options.silent) {
       console.log('✅ Ready. Watching for changes...')
