@@ -77,7 +77,7 @@
     "steps": [
       {
         "title": "1. Install",
-        "code": "npm install pug-tail"
+        "code": "npm install pug-tail@alpha"
       },
       {
         "title": "2. Define a Component",

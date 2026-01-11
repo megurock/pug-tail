@@ -9,7 +9,7 @@ This directory contains demo pages where you can experience the features of PugT
 npm run pug-tail:build
 
 # Check the generated HTML
-open examples/compiled/index.html
+open ../demo/index.html
 ```
 
 ## 📄 Demo Pages
@@ -23,18 +23,7 @@ A landing page that introduces the overview and main features of PugTail.
 - 📦 Examples of Props and Slots
 - 🔗 Links to other demo pages
 
-### 2. **control-structures.html** - Control Structures Demo
-Demonstrates that components are correctly expanded within all Pug control structures.
-
-**Covered Control Structures:**
-- 🔁 Each loops (`each`)
-- ❓ If/Else conditionals (`if`/`else`)
-- 🚫 Unless conditionals (`unless`)
-- 🔀 Case/When statements (`case`/`when`)
-- 🔄 While loops (`while`)
-- 🪆 Nested structures (combinations)
-
-### 3. **about.html** - Slots & Props Detailed Demo
+### 2. **about.html** - Slots & Props Detailed Demo
 A tutorial page where you can learn advanced usage of slots and props.
 
 **Covered Content:**
@@ -42,6 +31,14 @@ A tutorial page where you can learn advanced usage of slots and props.
 - 🎰 Named Slots - Multiple named slots
 - 💡 Default Content - Default content
 - 🔍 Conditional Slots - Conditional display of slots
+- 
+### 3. **cli-guide.html** - CLI Usage Guide
+A practical guide on how to use the PugTail CLI. It explains how to pass data to pages and build them.
+
+**Features:**
+- 📦 Passing data from JSON files (`--data`, `--data-files`)
+- 📄 Building specific pages
+- ⚙️ Using a configuration file (`pugtail.config.js`)
 
 ## 🎨 Styling
 
@@ -60,15 +57,23 @@ All demo pages use the **Tailwind CSS CDN**:
 ## 📁 Directory Structure
 
 ```
-examples/
-├── pages/              # Pug source files
-│   ├── index.pug      # Main page
-│   ├── control-structures.pug  # Control structures demo
-│   └── about.pug      # Slots & Props demo
-├── components/         # Shared components (not used)
-├── data/              # JSON data files (not used)
-├── compiled/          # HTML after build (generated)
-└── README.md          # This file
+.
+├── demo/               # HTML after build (generated)
+│   ├── index.html
+│   ├── about.html
+│   └── cli-guide.html
+└── examples/
+    ├── pages/              # Pug source files for each page
+    │   ├── index.pug
+    │   ├── about.pug
+    │   └── cli-guide.pug
+    ├── components/         # Shared components used across pages
+    ├── data/               # JSON data for pages
+    │   ├── global.json     # Global data available to all pages
+    │   ├── index.json      # Data for index.pug
+    │   ├── about.json      # Data for about.pug
+    │   └── cli-guide.json  # Data for cli-guide.pug
+    └── pugtail.config.js   # PugTail configuration file
 ```
 
 ## 🔧 Customization

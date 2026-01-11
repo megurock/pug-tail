@@ -19,11 +19,11 @@
       "commands": [
         {
           "title": "Using npm:",
-          "code": "npm install pug-tail"
+          "code": "npm install pug-tail@alpha"
         },
         {
           "title": "Using yarn:",
-          "code": "yarn add pug-tail"
+          "code": "yarn add pug-tail@alpha"
         }
       ]
     },
