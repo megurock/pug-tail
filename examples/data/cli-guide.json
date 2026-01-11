@@ -67,7 +67,7 @@
         },
         {
           "flag": "--obj <path>",
-          "description": "Data file (JSON/YAML) to inject into templates"
+          "description": "Data file (JSON) to inject into templates"
         },
         {
           "flag": "--pretty",

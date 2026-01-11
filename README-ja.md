@@ -116,7 +116,7 @@ npx pug-tail -c pugtail.config.js
 - `-o, --out <dir>` - 出力ディレクトリまたはファイル
 - `-w, --watch` - ウォッチモード（ファイルの変更を監視）
 - `-c, --config <path>` - 設定ファイルのパス
-- `--obj <path>` - データファイル（JSON/YAML）のパス
+- `--obj <path>` - データファイル（JSON）のパス
 - `--pretty` - HTML 出力を整形する
 - `--basedir <path>` - 絶対パスでの include の基準ディレクトリ
 - `-d, --debug` - デバッグ出力を有効化（コンポーネント登録、スロット検出などの詳細を表示）

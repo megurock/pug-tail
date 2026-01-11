@@ -116,7 +116,7 @@ npx pug-tail -c pugtail.config.js
 - `-o, --out <dir>` - Output directory or file
 - `-w, --watch` - Watch mode (monitors file changes)
 - `-c, --config <path>` - Path to the configuration file
-- `--obj <path>` - Path to a data file (JSON/YAML)
+- `--obj <path>` - Path to a data file (JSON)
 - `--pretty` - Formats the HTML output
 - `--basedir <path>` - Base directory for absolute includes
 - `-d, --debug` - Enable debug output (shows details like component registration, slot detection, etc.)
