@@ -101,8 +101,44 @@ export class Watcher {
       }
     }
 
+    // Convert paths to watch patterns
+    // Important: chokidar needs to watch actual files/directories, not glob patterns
+    // For glob patterns, we need to expand them first and watch the base directory
+    const watchPaths: string[] = []
+
+    for (const p of paths) {
+      const absolutePath = resolveAbsolutePath(p)
+
+      if (p.includes('*')) {
+        // Glob pattern - extract base directory to watch
+        // For '**/*.pug' or 'dir/**/*.pug', watch from the base
+        const baseDir =
+          absolutePath.split('**')[0]?.replace(/[*?[\]]/g, '') || '.'
+        const cleanBase = baseDir.replace(/\/$/, '') || '.'
+        if (debug) {
+          console.log(
+            `[watch] Glob pattern "${p}" -> watching base: ${cleanBase}`,
+          )
+        }
+        watchPaths.push(cleanBase)
+      } else if (p.endsWith('.pug')) {
+        // Single file
+        watchPaths.push(absolutePath)
+      } else {
+        // Directory
+        watchPaths.push(absolutePath)
+      }
+    }
+
+    // Remove duplicates
+    const uniqueWatchPaths = [...new Set(watchPaths)]
+
+    if (debug) {
+      console.log('[watch] Watch paths (after processing):', uniqueWatchPaths)
+    }
+
     // Start watching
-    this.watcher = chokidar.watch(paths, {
+    this.watcher = chokidar.watch(uniqueWatchPaths, {
       ignored: [
         /(^|[/\\])\../, // Ignore dotfiles
         /node_modules/, // Ignore node_modules
@@ -110,17 +146,57 @@ export class Watcher {
       ],
       ignoreInitial: true,
       persistent: true,
+      usePolling: false, // Use native fs events (faster)
+      interval: 100, // Polling interval if usePolling is true
+      binaryInterval: 300, // Polling interval for binary files
+      alwaysStat: false,
+      depth: 99,
       awaitWriteFinish: {
-        stabilityThreshold: 100,
-        pollInterval: 50,
+        stabilityThreshold: 200,
+        pollInterval: 100,
       },
     })
 
+    if (debug) {
+      console.log('[watch] Watcher options:', {
+        paths: uniqueWatchPaths,
+        usePolling: false,
+        ignoreInitial: true,
+        depth: 99,
+      })
+    }
+
     this.watcher
-      .on('add', (path: string) => this.handleFileAdded(path))
-      .on('change', (path: string) => this.handleFileChanged(path))
-      .on('unlink', (path: string) => this.handleFileDeleted(path))
+      .on('add', (path: string) => {
+        if (debug) {
+          console.log(`[watch] Event: add - ${path}`)
+        }
+        this.handleFileAdded(path)
+      })
+      .on('change', (path: string) => {
+        if (debug) {
+          console.log(`[watch] Event: change - ${path}`)
+        }
+        this.handleFileChanged(path)
+      })
+      .on('unlink', (path: string) => {
+        if (debug) {
+          console.log(`[watch] Event: unlink - ${path}`)
+        }
+        this.handleFileDeleted(path)
+      })
       .on('error', (error: unknown) => this.handleError(error as Error))
+      .on('ready', () => {
+        if (debug) {
+          console.log('[watch] Watcher is ready')
+          console.log('[watch] Watched files:', this.watcher?.getWatched())
+        }
+      })
+      .on('all', (event: string, path: string) => {
+        if (debug) {
+          console.log(`[watch] Event: ${event} - ${path}`)
+        }
+      })
 
     if (!this.options.silent) {
       console.log('✅ Ready. Watching for changes...')
@@ -165,14 +241,22 @@ export class Watcher {
    * Handles file change.
    */
   private handleFileChanged(path: string): void {
-    if (!isPugFile(path)) return
+    if (!isPugFile(path)) {
+      if (this.options.debug) {
+        console.log(`[watch] Ignoring non-pug file: ${path}`)
+      }
+      return
+    }
 
     if (this.options.debug) {
       console.log(`[watch] File changed: ${path}`)
     }
 
     // Always analyze dependencies (even for partial files)
-    this.dependencyTracker.analyzeDependencies(path)
+    const dependencies = this.dependencyTracker.analyzeDependencies(path)
+    if (this.options.debug && dependencies.size > 0) {
+      console.log(`[watch] ${path} has ${dependencies.size} dependencies`)
+    }
 
     // Recompile all files that depend on this file
     const dependents = this.dependencyTracker.getDependents(path)
@@ -181,12 +265,18 @@ export class Watcher {
         console.log(
           `[watch] ${dependents.size} dependent(s) will be recompiled`,
         )
+        for (const dependent of dependents) {
+          console.log(`[watch]   - ${dependent}`)
+        }
       }
       for (const dependent of dependents) {
         this.debounceProcess(dependent, 'changed')
       }
     } else {
       // Only recompile the file itself if it has no dependents
+      if (this.options.debug) {
+        console.log(`[watch] No dependents, recompiling file itself`)
+      }
       this.debounceProcess(path, 'changed')
     }
   }
