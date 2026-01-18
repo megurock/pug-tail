@@ -1,0 +1,8 @@
+component Button()
+  - const { label, type = "button" } = $props
+  - const { disabled } = $props
+  button(type=type, disabled=disabled)= label
+
+- const label = "Submit"
+- const disabled = true
+Button(label, type="submit", disabled)

@@ -1,0 +1,14 @@
+component Card()
+  - const { title, subtitle } = $props
+  - const { class: className = "card" } = $attrs
+  .card(class=className)
+    h2= title
+    if subtitle
+      h3= subtitle
+    slot(body)
+
+- const title = "My Title"
+- const subtitle = "My Subtitle"
+Card(title, subtitle, class="custom-card")
+  slot(body)
+    p Content

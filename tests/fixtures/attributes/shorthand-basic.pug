@@ -1,0 +1,9 @@
+component Card()
+  - const { title, count } = $props
+  .card
+    h2= title
+    p Count: #{count}
+
+- const title = "Hello"
+- const count = 5
+Card(title, count)

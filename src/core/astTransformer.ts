@@ -146,6 +146,9 @@ export class ASTTransformer {
         // This maintains Phase 2 compatibility
         if (usage.fromProps.length > 0 || usage.fromAttrs.length > 0) {
           definition.usage = usage
+
+          // Fix mustEscape for props/attrs derived variables
+          this.fixMustEscapeForPropsAttrs(definition.body, usage)
         }
         // If neither props nor attrs are used, leave usage undefined
         // to fall back to Phase 2 mode (attributes)
@@ -713,7 +716,7 @@ export class ASTTransformer {
 
         const iifeStart: Code = {
           type: 'Code',
-          val: `((${paramNames.join(', ')}) => {`,
+          val: `;((${paramNames.join(', ')}) => {`,
           buffer: false,
           mustEscape: false,
           isInline: false,
@@ -895,6 +898,80 @@ export class ASTTransformer {
 
     // Return other nodes as is.
     return ast
+  }
+
+  /**
+   * Fixes mustEscape for attributes that use props/attrs derived variables.
+   *
+   * When an attribute value references a variable from $props or $attrs destructuring,
+   * we need to set mustEscape to false to prevent pug-code-gen from calling pug.escape()
+   * on the value, which would convert booleans to strings.
+   *
+   * @param componentBody - The component body Block
+   * @param usage - The detected usage patterns (fromProps and fromAttrs)
+   */
+  private fixMustEscapeForPropsAttrs(
+    componentBody: Block,
+    usage: { fromProps: string[]; fromAttrs: string[] },
+  ): void {
+    const propsVars = new Set(usage.fromProps)
+    const attrsVars = new Set(usage.fromAttrs)
+    const allVars = new Set([...propsVars, ...attrsVars])
+
+    // Recursively traverse the component body and fix mustEscape
+    const fixNode = (node: Node): void => {
+      if (node.type === 'Tag') {
+        const tag = node as Tag
+
+        // Fix mustEscape for attributes
+        if (tag.attrs) {
+          for (const attr of tag.attrs) {
+            // Check if attribute value is a simple variable reference from props/attrs
+            if (typeof attr.val === 'string' && allVars.has(attr.val.trim())) {
+              attr.mustEscape = false
+            }
+          }
+        }
+
+        // Recursively process child block
+        if (tag.block) {
+          fixBlock(tag.block)
+        }
+      } else if (node.type === 'Block') {
+        fixBlock(node as Block)
+      } else if (node.type === 'Conditional') {
+        const conditional = node as Conditional
+        if (conditional.consequent) fixBlock(conditional.consequent)
+        if (conditional.alternate) {
+          if (conditional.alternate.type === 'Block') {
+            fixBlock(conditional.alternate)
+          } else if (conditional.alternate.type === 'Conditional') {
+            fixNode(conditional.alternate)
+          }
+        }
+      } else if (node.type === 'Each') {
+        const each = node as Each
+        if (each.block) fixBlock(each.block)
+        if (each.alternate) fixBlock(each.alternate)
+      } else if (node.type === 'Case') {
+        const caseNode = node as Case
+        if (caseNode.block) fixBlock(caseNode.block)
+      } else if (node.type === 'When') {
+        const whenNode = node as When
+        if (whenNode.block) fixBlock(whenNode.block)
+      } else if (node.type === 'While') {
+        const whileNode = node as While
+        if (whileNode.block) fixBlock(whileNode.block)
+      }
+    }
+
+    const fixBlock = (block: Block): void => {
+      for (const node of block.nodes) {
+        if (node) fixNode(node)
+      }
+    }
+
+    fixBlock(componentBody)
   }
 
   /**
