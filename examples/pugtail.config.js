@@ -31,11 +31,11 @@ export default {
     //     `pages/index.pug` → `compiled/index.html` (`pages` is the root)
     root: 'pages',
 
-    // File rendering pattern
+    // File entry pattern
     // Controls which `.pug` files are output as `.html`.
     // Supports glob patterns and negation patterns (`!`).
     // Default: ['**/*.pug', '!**/_*.pug', '!**/*.component.pug', '!**/components/**/*.pug']
-    render: [
+    entry: [
       '**/*.pug', // All .pug files
       '!**/_*.pug', // Exclude files starting with _ (Pug standard)
       '!**/*.component.pug', // Exclude components based on naming convention

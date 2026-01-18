@@ -28,7 +28,7 @@ export interface PugTailConfig {
     root?: string
 
     /**
-     * Render patterns - determines which .pug files should be compiled to .html
+     * Entry patterns - determines which .pug files should be compiled to .html
      * Supports glob patterns with negation (!)
      *
      * Files matching these patterns will be compiled and output.
@@ -38,7 +38,7 @@ export interface PugTailConfig {
      *
      * @example
      * ```js
-     * render: [
+     * entry: [
      *   '**\/*.pug',                    // All .pug files
      *   '!**\/_*.pug',                  // Exclude files starting with _ (Pug standard)
      *   '!**\/*.component.pug',         // Exclude component files by naming convention
@@ -46,7 +46,7 @@ export interface PugTailConfig {
      * ]
      * ```
      */
-    render?: string[]
+    entry?: string[]
   }
 
   /** Output file extension (default: .html) */

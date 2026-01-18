@@ -137,12 +137,12 @@ export function mergeConfig(
       // Merge each property (CLI takes precedence)
       input: cliOptions.files?.input || config.files?.input,
       output: cliOptions.files?.output || config.files?.output,
-      // If CLI explicitly sets render to undefined, use undefined (not config value)
+      // If CLI explicitly sets entry to undefined, use undefined (not config value)
       // Otherwise, use CLI value if set, or config value
-      render:
-        cliOptions.files?.render === undefined && cliOptions.files?.input
+      entry:
+        cliOptions.files?.entry === undefined && cliOptions.files?.input
           ? undefined
-          : cliOptions.files?.render || config.files?.render,
+          : cliOptions.files?.entry || config.files?.entry,
     },
     watch: {
       ...config.watch,

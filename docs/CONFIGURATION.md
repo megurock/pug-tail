@@ -118,14 +118,14 @@ output: 'dist/index.html'
 root: 'examples/pages'
 ```
 
-#### `files.render`
+#### `files.entry`
 
 - **Type**: `string[]`
 - **Default**: `['**/*.pug', '!**/_*.pug', '!**/*.component.pug', '!**/components/**/*.pug']`
 - **Description**: Patterns determining which .pug files to compile. Supports negation with `!`
 
 ```javascript
-render: [
+entry: [
   '**/*.pug',                    // All .pug files
   '!**/_*.pug',                  // Exclude files starting with _ (Pug standard)
   '!**/*.component.pug',         // Exclude component files by naming convention
@@ -620,7 +620,7 @@ export default {
     input: ['src/pages/**/*.pug', 'src/templates/**/*.pug'],
     output: 'dist',
     root: 'src/pages',
-    render: [
+    entry: [
       '**/*.pug',
       '!**/_*.pug',
       '!**/*.component.pug',

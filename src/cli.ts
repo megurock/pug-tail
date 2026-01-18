@@ -61,8 +61,8 @@ interface CLIOptions {
   /** Config file path. */
   config?: string
 
-  /** Render file patterns (which files to compile). */
-  renderFiles?: string[]
+  /** Entry file patterns (which files to compile). */
+  entryFiles?: string[]
 }
 
 /**
@@ -96,10 +96,10 @@ Options:
 
   Config:
     -c, --config <path>       Path to config file (default: auto-detect)
-    --render-files, --render <patterns>  Render file patterns (comma or space separated)
-                                         Determines which .pug files to compile to HTML
-                                         Supports negation patterns (!)
-                                         Example: --render-files "**/*.pug,!**/components/**"
+    -e, --entry-files <patterns>  Entry file patterns (comma or space separated)
+                                  Determines which .pug files to compile to HTML
+                                  Supports negation patterns (!)
+                                  Example: --entry-files "**/*.pug,!**/components/**"
 
   Other:
     -d, --debug               Enable debug output
@@ -243,21 +243,21 @@ function parseArgs(args: string[]): CLIOptions {
       }
       options.config = next
       i++
-    } else if (arg === '--render-files' || arg === '--render') {
+    } else if (arg === '-e' || arg === '--entry-files') {
       // Parse comma-separated or space-separated patterns
       const next = args[i + 1]
       if (!next || next.startsWith('-')) {
-        console.error('Error: --render-files requires at least one pattern')
+        console.error('Error: --entry-files requires at least one pattern')
         process.exit(1)
       }
-      // Support comma-separated: --render-files "**/*.pug,!**/components/**"
-      // Or space-separated: --render-files "**/*.pug" "!**/components/**"
-      if (!options.renderFiles) {
-        options.renderFiles = []
+      // Support comma-separated: --entry-files "**/*.pug,!**/components/**"
+      // Or space-separated: --entry-files "**/*.pug" "!**/components/**"
+      if (!options.entryFiles) {
+        options.entryFiles = []
       }
       if (next.includes(',')) {
         // Comma-separated
-        options.renderFiles.push(...next.split(',').map((p) => p.trim()))
+        options.entryFiles.push(...next.split(',').map((p) => p.trim()))
         i++
       } else {
         // Space-separated - collect all patterns until next option
@@ -272,10 +272,10 @@ function parseArgs(args: string[]): CLIOptions {
           j++
         }
         if (patterns.length === 0) {
-          console.error('Error: --render-files requires at least one pattern')
+          console.error('Error: --entry-files requires at least one pattern')
           process.exit(1)
         }
-        options.renderFiles.push(...patterns)
+        options.entryFiles.push(...patterns)
         i = j - 1
       }
     } else if (arg && !arg.startsWith('-')) {
@@ -623,22 +623,22 @@ async function main(): Promise<void> {
   // Merge config file with CLI options (CLI options take precedence)
   // Only include properties that are explicitly set in CLI options
   const cliConfig: Partial<PugTailConfig> = {}
-  if (options.inputs.length > 0 || options.output || options.renderFiles) {
+  if (options.inputs.length > 0 || options.output || options.entryFiles) {
     cliConfig.files = {}
     if (options.inputs.length > 0) {
       cliConfig.files.input = options.inputs
-      // If CLI inputs are specified, ignore config file's render patterns
+      // If CLI inputs are specified, ignore config file's entry patterns
       // (they are only for config file's input)
-      // Use default patterns unless --render-files is explicitly specified
-      if (!options.renderFiles) {
-        cliConfig.files.render = undefined
+      // Use default patterns unless --entry-files is explicitly specified
+      if (!options.entryFiles) {
+        cliConfig.files.entry = undefined
       }
     }
     if (options.output) {
       cliConfig.files.output = options.output
     }
-    if (options.renderFiles) {
-      cliConfig.files.render = options.renderFiles
+    if (options.entryFiles) {
+      cliConfig.files.entry = options.entryFiles
     }
   }
   if (options.extension) {

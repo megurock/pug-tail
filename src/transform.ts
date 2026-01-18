@@ -9,7 +9,6 @@ import generateCode from 'pug-code-gen'
 import lex from 'pug-lexer'
 import load from 'pug-load'
 import parse from 'pug-parser'
-import { dataLoader } from '@/cli/dataLoader.js'
 import { ASTTransformer } from '@/core/astTransformer.js'
 import { ComponentRegistry } from '@/core/componentRegistry.js'
 import type { ErrorHandlerOptions } from '@/core/errorHandler.js'
@@ -19,6 +18,7 @@ import {
   detectDataFiles,
   removeDataFilesDeclaration,
 } from '@/utils/dataFilesDetector.js'
+import { dataLoader } from './cli/dataLoader.js'
 
 /**
  * Transform options

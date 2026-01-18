@@ -123,7 +123,7 @@ export class FileProcessor {
       // Use process.cwd() as basePath for pattern matching
       const basePath = process.cwd()
       const patterns =
-        this.options.config?.files?.render || getDefaultOutputPatterns()
+        this.options.config?.files?.entry || getDefaultOutputPatterns()
 
       if (this.options.debug) {
         this.log(
