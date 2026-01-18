@@ -110,10 +110,23 @@ npx pug-tail src/index.pug -o dist/index.html --obj data.json
 
 # Use a configuration file
 npx pug-tail -c pugtail.config.js
+
+# Specify entry patterns (which files to compile)
+# Comma-separated
+npx pug-tail src -o dist -e "**/*.pug,!**/components/**"
+
+# Or space-separated
+npx pug-tail src -o dist -e "**/*.pug" "!**/components/**"
 ```
 
 **Key CLI Options**:
 - `-o, --out <dir>` - Output directory or file
+- `-e, --entry-files <patterns>` - Entry file patterns (comma or space separated)
+  - Determines which .pug files are compiled to HTML
+  - Supports negation patterns with `!`
+  - Example: `-e "**/*.pug" "!**/components/**"`
+  - Default (if not specified): `['**/*.pug', '!**/_*.pug', '!**/*.component.pug', '!**/components/**/*.pug']`
+  - **Note**: By default, files starting with `_`, `*.component.pug`, and files in `components/` directories are excluded from compilation
 - `-w, --watch` - Watch mode (monitors file changes)
 - `-c, --config <path>` - Path to the configuration file
 - `--obj <path>` - Path to a data file (JSON)
@@ -142,6 +155,32 @@ header
 - Relative paths are resolved relative to the entry file.
 
 See the [Configuration Guide](./docs/CONFIGURATION.md) for more details.
+
+### Configuration File
+
+For complex projects, use a configuration file (`pugtail.config.js`):
+
+```javascript
+export default {
+  files: {
+    input: 'src/pages/**/*.pug',
+    output: 'dist',
+    root: 'src/pages',
+    entry: [
+      '**/*.pug',                    // All .pug files
+      '!**/_*.pug',                  // Exclude files starting with _
+      '!**/*.component.pug',         // Exclude component files
+      '!**/components/**/*.pug',     // Exclude components directory
+    ],
+  },
+  basedir: 'src',
+  pretty: true,
+  data: './data/global.json',
+  dataKey: 'global',
+}
+```
+
+The `entry` patterns determine which files are compiled to HTML. Files not matching these patterns (like components) are still processed for includes but won't generate output files.
 
 ### Programmatic API
 

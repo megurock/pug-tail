@@ -110,10 +110,23 @@ npx pug-tail src/index.pug -o dist/index.html --obj data.json
 
 # 設定ファイルを使用
 npx pug-tail -c pugtail.config.js
+
+# エントリーパターンを指定（どのファイルをコンパイルするか）
+# カンマ区切り
+npx pug-tail src -o dist -e "**/*.pug,!**/components/**"
+
+# またはスペース区切り
+npx pug-tail src -o dist -e "**/*.pug" "!**/components/**"
 ```
 
 **主なCLIオプション**:
 - `-o, --out <dir>` - 出力ディレクトリまたはファイル
+- `-e, --entry-files <patterns>` - エントリーファイルパターン（カンマまたはスペース区切り）
+  - どの .pug ファイルを HTML にコンパイルするかを決定
+  - `!` を使った除外パターンをサポート
+  - 例: `-e "**/*.pug" "!**/components/**"`
+  - デフォルト（未指定の場合）: `['**/*.pug', '!**/_*.pug', '!**/*.component.pug', '!**/components/**/*.pug']`
+  - **注意**: デフォルトでは `_` で始まるファイル、`*.component.pug`、`components/` ディレクトリ内のファイルはコンパイル対象から除外されます
 - `-w, --watch` - ウォッチモード（ファイルの変更を監視）
 - `-c, --config <path>` - 設定ファイルのパス
 - `--obj <path>` - データファイル（JSON）のパス
@@ -142,6 +155,32 @@ header
 - 相対パスはエントリーファイルからの相対パスとして解決
 
 詳細は[設定ガイド](./docs/CONFIGURATION.md)（英語）を参照してください。
+
+### 設定ファイル
+
+複雑なプロジェクトでは、設定ファイル（`pugtail.config.js`）を使用します：
+
+```javascript
+export default {
+  files: {
+    input: 'src/pages/**/*.pug',
+    output: 'dist',
+    root: 'src/pages',
+    entry: [
+      '**/*.pug',                    // 全ての .pug ファイル
+      '!**/_*.pug',                  // _ で始まるファイルを除外
+      '!**/*.component.pug',         // コンポーネントファイルを除外
+      '!**/components/**/*.pug',     // components ディレクトリを除外
+    ],
+  },
+  basedir: 'src',
+  pretty: true,
+  data: './data/global.json',
+  dataKey: 'global',
+}
+```
+
+`entry` パターンは、どのファイルを HTML にコンパイルするかを決定します。これらのパターンにマッチしないファイル（コンポーネントなど）は、include 時に処理されますが、出力ファイルは生成されません。
 
 ### プログラマティックAPI
 
