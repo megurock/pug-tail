@@ -300,6 +300,7 @@ registerTransformer('customTransform', (ast, options) => {
 Support passing data from component to slot content:
 ```pug
 component List()
+  - const { items = [] } = $props
   each item in items
     slot(item, data=item)
 

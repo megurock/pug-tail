@@ -6,7 +6,7 @@ This directory contains demo pages where you can experience the features of PugT
 
 ```bash
 # From the project root
-npm run pug-tail:build
+npm run build
 
 # Check the generated HTML
 open ../demo/index.html
@@ -92,7 +92,7 @@ head
 To add a new component:
 
 1. Use the `component` keyword in a `.pug` file
-2. Build with `npm run pug-tail:build`
+2. Build with `npm run build`
 3. Check the result in the `compiled/` directory
 
 Example:
@@ -120,7 +120,7 @@ During development, it's convenient to use a file watching tool:
 ```bash
 # Add to package.json
 "scripts": {
-  "watch": "nodemon --watch examples/pages --ext pug --exec npm run pug-tail:build"
+  "watch": "nodemon --watch examples/pages --ext pug --exec npm run build"
 }
 ```
 
