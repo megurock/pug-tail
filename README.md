@@ -358,4 +358,4 @@ MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ---
 
-**Status**: Alpha Release (v0.1.0-alpha.0) - 286 tests passing ✅
+**Status**: Alpha Release

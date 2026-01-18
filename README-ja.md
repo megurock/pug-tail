@@ -358,4 +358,4 @@ MIT ライセンス - 詳細は[LICENSE](./LICENSE)ファイルをご覧くだ�
 
 ---
 
-**ステータス**: Alpha Release (v0.1.0-alpha.0) - 286 件のテストが成功 ✅
+**ステータス**: Alpha Release

@@ -373,11 +373,8 @@ Consider writing tests before implementation:
 ### 🚧 Future Features
 
 **Planned**:
-- Property shorthand syntax: `Card(title)` instead of `Card(title=title)`
 - Scoped slots: Pass data from component to slots
-- Component imports: `import Card from './Card.pug'`
 - Better TypeScript integration
-- Source maps support
 
 ## Questions?
 

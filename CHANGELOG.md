@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-alpha.0] - 2026-01-18
+
+### Added
+
+- **Property Shorthand Syntax**: Vue/Svelte-style shorthand for component props
+  - `Card(title, count)` automatically expands to `Card(title=title, count=count)`
+  - Supports mixing shorthand and explicit syntax in the same call
+  - Works with boolean attributes correctly
+
+### Changed
+
+- **BREAKING**: Renamed `render` configuration option to `entry`
+  - `files.render` → `files.entry` in config files
+  - `--render-files` → `-e, --entry-files` CLI option
+  - Rationale: "entry" is more intuitive and industry-standard (Webpack, Vite, Rollup)
+  - Migration: Update `render:` to `entry:` in `pugtail.config.js`
+
+### Fixed
+
+- Boolean attributes now correctly use `mustEscape: false` for proper rendering
+- Import path resolution issue in `transform.ts` (changed from `@/cli` to relative path)
+
+### Documentation
+
+- Applied shorthand syntax to example pages
+- Simplified and clarified examples/README.md
+- Updated all documentation to use `entry` terminology
+
 ## [0.1.0-alpha.0] - 2026-01-10
 
 ### Added
@@ -34,4 +62,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Watch Mode**: CLI supports file watching for development
 - **Error Handling**: Detailed error messages with file locations
 
+---
+
+**Note**: Versions 0.1.0-alpha.1 through 0.1.0-alpha.7 contained iterative improvements and bug fixes during initial alpha testing. Detailed changelogs are maintained from v0.2.0-alpha.0 onwards.
+
+[0.2.0-alpha.0]: https://github.com/megurock/pug-tail/releases/tag/v0.2.0-alpha.0
 [0.1.0-alpha.0]: https://github.com/megurock/pug-tail/releases/tag/v0.1.0-alpha.0
