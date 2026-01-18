@@ -122,4 +122,115 @@ describe('Attribute handling (Phase 2)', () => {
       )
     })
   })
+
+  describe('Shorthand Syntax', () => {
+    test('should handle basic shorthand', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'attributes',
+        'shorthand-basic',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify shorthand expansion works
+      expect(result.html).toContain('<h2>Hello</h2>')
+      expect(result.html).toContain('Count: 5')
+    })
+
+    test('should handle mixed shorthand and explicit', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'attributes',
+        'shorthand-mixed',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify mixed syntax works
+      expect(result.html).toContain('type="submit"')
+      expect(result.html).toContain('disabled>')
+      expect(result.html).toContain('Submit')
+    })
+
+    test('should handle undefined variable', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'attributes',
+        'shorthand-undefined',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify undefined variable doesn't add attribute
+      expect(result.html).toContain('<button>Click</button>')
+      expect(result.html).not.toContain('disabled')
+    })
+
+    test('should handle boolean attributes', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'attributes',
+        'shorthand-boolean',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify boolean attribute handling (correct behavior)
+      expect(result.html).toContain('required')
+      expect(result.html).not.toContain('disabled')
+      expect(result.html).not.toContain('readonly')
+    })
+
+    test('should handle props/attrs with shorthand', () => {
+      const { pug, html: expectedHtml } = loadFixture(
+        'attributes',
+        'shorthand-props-attrs',
+      )
+
+      const result = transform(pug, { output: 'html' })
+
+      expect(result.html).toBeDefined()
+      if (result.html && expectedHtml) {
+        const normalize = (str: string) =>
+          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
+
+        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      }
+
+      // Verify props/attrs integration with shorthand
+      expect(result.html).toContain('class="card custom-card"')
+      expect(result.html).toContain('<h2>My Title</h2>')
+      expect(result.html).toContain('<h3>My Subtitle</h3>')
+      expect(result.html).toContain('<p>Content</p>')
+    })
+  })
 })
