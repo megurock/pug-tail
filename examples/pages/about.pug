@@ -9,14 +9,15 @@
 //- Load page-specific data files
 - const $dataFiles = ['/data/about.json']
 
+//- Rename for shorthand syntax
+- const title = pageTitle
+- const description = pageDescription
+
 include ../components/Layout.pug
 include ../components/Card.pug
 include ../components/CodeBlock.pug
 
-Layout(
-  title=pageTitle
-  description=pageDescription
-)
+Layout(title, description)
   slot(main)
     .bg-gradient-to-br.from-purple-50.to-pink-50.min-h-screen.py-12.px-4
       

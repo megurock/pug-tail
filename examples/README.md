@@ -5,11 +5,14 @@ This directory contains demo pages where you can experience the features of PugT
 ## 🚀 Build and Run
 
 ```bash
-# From the project root
-npm run build
+# From the examples directory
+$ pwd
+/path/to/pug-tail/examples
+
+$ npm run build
 
 # Check the generated HTML
-open ../demo/index.html
+$ open ../demo/index.html
 ```
 
 ## 📄 Demo Pages
@@ -42,17 +45,13 @@ A practical guide on how to use the PugTail CLI. It explains how to pass data to
 
 ## 🎨 Styling
 
-All demo pages use the **Tailwind CSS CDN**:
+All demo pages use **Tailwind CSS via CDN** for quick setup and easy viewing:
 
 ```html
 <script src="https://cdn.tailwindcss.com"></script>
 ```
 
-**Benefits:**
-- ✅ No build required
-- ✅ No additional configuration files
-- ✅ Ready to use immediately
-- ✅ Can be opened directly in the browser
+No build step or configuration required—just open the HTML files directly in your browser.
 
 ## 📁 Directory Structure
 
@@ -76,24 +75,13 @@ All demo pages use the **Tailwind CSS CDN**:
     └── pugtail.config.js   # PugTail configuration file
 ```
 
-## 🔧 Customization
-
-### Using Your Own CSS File
-
-Instead of the Tailwind CDN, you can also use your own CSS file:
-
-```pug
-head
-  link(rel="stylesheet" href="/path/to/styles.css")
-```
-
-### Adding Components
+## 🔧 Adding Your Own Components
 
 To add a new component:
 
-1. Use the `component` keyword in a `.pug` file
+1. Create a `.pug` file with the `component` keyword
 2. Build with `npm run build`
-3. Check the result in the `compiled/` directory
+3. Check the result in `../demo/`
 
 Example:
 ```pug
@@ -101,44 +89,13 @@ component Button()
   - const { label, variant = 'primary' } = $props
   button(class=`btn-${variant}`)= label
 
-// Usage
-Button(label="Click me" variant="success")
+// Usage with shorthand syntax
+- const label = "Click me"
+Button(label, variant="success")
 ```
 
-## 📚 Related Links
+## 📚 Learn More
 
 - [PugTail Documentation](https://github.com/megurock/pug-tail)
 - [Pug Documentation](https://pugjs.org/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/)
-
-## 💡 Tips
-
-### Live Reload
-
-During development, it's convenient to use a file watching tool:
-
-```bash
-# Add to package.json
-"scripts": {
-  "watch": "nodemon --watch examples/pages --ext pug --exec npm run build"
-}
-```
-
-### Opening Directly in the Browser
-
-The built HTML files can be opened directly in your browser:
-
-```bash
-# macOS
-open examples/compiled/index.html
-
-# Linux
-xdg-open examples/compiled/index.html
-
-# Windows
-start examples/compiled/index.html
-```
-
-### Production Build
-
-For a production environment, it is recommended to use a built CSS file instead of the Tailwind CDN.

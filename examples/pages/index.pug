@@ -16,14 +16,15 @@
 //- Load page-specific data files
 - const $dataFiles = ['/data/index.json']
 
+//- Rename for shorthand syntax
+- const title = pageTitle
+- const description = pageDescription
+
 include ../components/Layout.pug
 include ../components/Card.pug
 include ../components/Feature.pug
 
-Layout(
-  title=pageTitle
-  description=pageDescription
-)
+Layout(title, description)
   slot(main)
     .bg-gradient-to-br.from-blue-50.via-white.to-purple-50.min-h-screen
       
