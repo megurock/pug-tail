@@ -7,6 +7,7 @@
 import { describe, expect, test } from 'vitest'
 import { transform } from '@/transform'
 import { loadFixture } from '../helpers/loadFixture.js'
+import { normalizeHTML } from '../helpers/normalizeHTML.js'
 
 describe('Include and extends', () => {
   describe('Include', () => {
@@ -15,7 +16,6 @@ describe('Include and extends', () => {
         'include',
         'basic-include',
       )
-
       const result = transform(pug, {
         output: 'html',
         filename: 'tests/fixtures/include/basic-include.pug',
@@ -23,10 +23,7 @@ describe('Include and extends', () => {
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that included component is correctly expanded
@@ -40,7 +37,6 @@ describe('Include and extends', () => {
         'include',
         'multiple-includes',
       )
-
       const result = transform(pug, {
         output: 'html',
         filename: 'tests/fixtures/include/multiple-includes.pug',
@@ -48,10 +44,7 @@ describe('Include and extends', () => {
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that multiple included components are correctly expanded
@@ -67,7 +60,6 @@ describe('Include and extends', () => {
         'include',
         'extends-layout',
       )
-
       const result = transform(pug, {
         output: 'html',
         filename: 'tests/fixtures/include/extends-layout.pug',
@@ -75,10 +67,7 @@ describe('Include and extends', () => {
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that extended layout component is correctly expanded
@@ -92,7 +81,6 @@ describe('Include and extends', () => {
         'include',
         'extends-components',
       )
-
       const result = transform(pug, {
         output: 'html',
         filename: 'tests/fixtures/include/extends-components.pug',
@@ -100,10 +88,7 @@ describe('Include and extends', () => {
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that extended components are correctly expanded

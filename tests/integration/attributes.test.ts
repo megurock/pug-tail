@@ -7,19 +7,16 @@
 import { describe, expect, test } from 'vitest'
 import { transform } from '@/transform'
 import { loadFixture } from '../helpers/loadFixture.js'
+import { normalizeHTML } from '../helpers/normalizeHTML.js'
 
 describe('Attribute handling (Phase 2)', () => {
   test('should handle basic attributes', () => {
     const { pug, html: expectedHtml } = loadFixture('attributes', 'basic')
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that attributes are passed correctly
@@ -29,15 +26,11 @@ describe('Attribute handling (Phase 2)', () => {
 
   test('should handle attribute fallthrough', () => {
     const { pug, html: expectedHtml } = loadFixture('attributes', 'fallthrough')
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that attributes are passed through to root element
@@ -51,15 +44,11 @@ describe('Attribute handling (Phase 2)', () => {
       'attributes',
       'type-preservation',
     )
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that types are preserved
@@ -75,15 +64,11 @@ describe('Attribute handling (Phase 2)', () => {
         'attributes',
         'manual-control',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that manual control is respected
@@ -100,15 +85,11 @@ describe('Attribute handling (Phase 2)', () => {
         'attributes',
         'manual-attrs-split',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that attrs splitting is respected
@@ -129,15 +110,11 @@ describe('Attribute handling (Phase 2)', () => {
         'attributes',
         'shorthand-basic',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify shorthand expansion works
@@ -150,15 +127,11 @@ describe('Attribute handling (Phase 2)', () => {
         'attributes',
         'shorthand-mixed',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify mixed syntax works
@@ -172,15 +145,11 @@ describe('Attribute handling (Phase 2)', () => {
         'attributes',
         'shorthand-undefined',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify undefined variable doesn't add attribute
@@ -193,15 +162,11 @@ describe('Attribute handling (Phase 2)', () => {
         'attributes',
         'shorthand-boolean',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify boolean attribute handling (correct behavior)
@@ -215,15 +180,11 @@ describe('Attribute handling (Phase 2)', () => {
         'attributes',
         'shorthand-props-attrs',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify props/attrs integration with shorthand

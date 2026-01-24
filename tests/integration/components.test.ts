@@ -7,6 +7,7 @@
 import { describe, expect, test } from 'vitest'
 import { transform } from '@/transform'
 import { loadFixture } from '../helpers/loadFixture.js'
+import { normalizeHTML } from '../helpers/normalizeHTML.js'
 
 describe('Component transformation', () => {
   describe('Basic components', () => {
@@ -15,16 +16,11 @@ describe('Component transformation', () => {
         'components',
         'simple-component',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        // Normalize HTML (ignore whitespace and line break differences)
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that component definitions and slots are removed
@@ -39,15 +35,11 @@ describe('Component transformation', () => {
         'nested',
         'nested-components',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that nested components are correctly expanded
@@ -63,15 +55,11 @@ describe('Component transformation', () => {
         'complex',
         'multiple-components',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that multiple components are correctly expanded

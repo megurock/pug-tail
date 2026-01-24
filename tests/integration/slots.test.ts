@@ -7,20 +7,17 @@
 import { describe, expect, test } from 'vitest'
 import { transform } from '@/transform'
 import { loadFixture } from '../helpers/loadFixture.js'
+import { normalizeHTML } from '../helpers/normalizeHTML.js'
 
 describe('Slot system', () => {
   describe('Basic slot functionality', () => {
     test('should handle multiple slots', () => {
       const { pug, html: expectedHtml } = loadFixture('slots', 'multiple-slots')
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that each slot's content is correctly placed
@@ -31,15 +28,11 @@ describe('Slot system', () => {
 
     test('should use default slot content when no slot is provided', () => {
       const { pug, html: expectedHtml } = loadFixture('slots', 'default-slot')
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that default slot content is used
@@ -50,15 +43,11 @@ describe('Slot system', () => {
   describe('Default and fallback behavior', () => {
     test('should use all default slots when none are provided', () => {
       const { pug, html: expectedHtml } = loadFixture('slots', 'all-defaults')
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that all default slots are used
@@ -72,15 +61,11 @@ describe('Slot system', () => {
         'slots',
         'mixed-default-provided',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that provided slot takes precedence and defaults are used for the rest
@@ -93,15 +78,11 @@ describe('Slot system', () => {
 
     test('should handle empty default slot when slot is provided', () => {
       const { pug, html: expectedHtml } = loadFixture('slots', 'empty-default')
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that the provided slot is used
@@ -113,15 +94,11 @@ describe('Slot system', () => {
         'slots',
         'empty-default-no-provided',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that empty default slot is used and container becomes empty
@@ -131,15 +108,11 @@ describe('Slot system', () => {
 
     test('should handle nested default slot content', () => {
       const { pug, html: expectedHtml } = loadFixture('slots', 'nested-default')
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that provided slot takes precedence and nested default is not used
@@ -157,15 +130,11 @@ describe('Slot system', () => {
         'slots',
         'default-slot-name',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that the provided slot is used
@@ -178,15 +147,11 @@ describe('Slot system', () => {
         'slots',
         'default-slot-name-no-provided',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that default slot content is used
@@ -198,15 +163,11 @@ describe('Slot system', () => {
   describe('Unnamed slots', () => {
     test('should handle unnamed slot (default slot) with direct child content', () => {
       const { pug, html: expectedHtml } = loadFixture('slots', 'unnamed-slot')
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that direct child elements are placed in unnamed slot
@@ -220,15 +181,11 @@ describe('Slot system', () => {
         'nested',
         'component-in-component-with-slot',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify that slot content from Outer is passed to Inner
