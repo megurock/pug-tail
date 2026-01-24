@@ -8,6 +8,7 @@
 import { describe, expect, test } from 'vitest'
 import { transform } from '@/transform'
 import { loadFixture } from '../helpers/loadFixture.js'
+import { normalizeHTML } from '../helpers/normalizeHTML.js'
 
 describe('Conditional slots', () => {
   describe('Slots inside if statements', () => {
@@ -16,15 +17,11 @@ describe('Conditional slots', () => {
         'conditional-slots',
         'if-slot',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify slot content is properly inserted
@@ -39,15 +36,11 @@ describe('Conditional slots', () => {
         'conditional-slots',
         'if-else-slot',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify all three alert types work with the same slot name
@@ -67,15 +60,11 @@ describe('Conditional slots', () => {
         'conditional-slots',
         'each-slot',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify slot is replicated for each iteration

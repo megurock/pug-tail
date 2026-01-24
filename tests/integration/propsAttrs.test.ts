@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { transform } from '@/transform'
 import { loadFixture } from '../helpers/loadFixture.js'
+import { normalizeHTML } from '../helpers/normalizeHTML.js'
 
 describe('Phase 3: props/attrs identifiers', () => {
   describe('Basic functionality', () => {
@@ -12,9 +13,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
 
@@ -26,9 +25,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
 
@@ -37,9 +34,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
 
@@ -51,9 +46,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
   })
@@ -67,9 +60,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
   })
@@ -83,9 +74,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
   })
@@ -99,9 +88,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
   })
@@ -115,9 +102,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
 
@@ -129,9 +114,7 @@ describe('Phase 3: props/attrs identifiers', () => {
       const result = transform(pug, { output: 'html' })
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
     })
   })

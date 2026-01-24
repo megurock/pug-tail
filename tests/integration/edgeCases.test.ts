@@ -7,6 +7,7 @@
 import { describe, expect, test } from 'vitest'
 import { transform } from '@/transform'
 import { loadFixture } from '../helpers/loadFixture.js'
+import { normalizeHTML } from '../helpers/normalizeHTML.js'
 
 describe('Edge cases', () => {
   test('should handle empty component', () => {
@@ -14,15 +15,11 @@ describe('Edge cases', () => {
       'edge-cases',
       'empty-component',
     )
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that empty component is correctly expanded
@@ -34,15 +31,11 @@ describe('Edge cases', () => {
       'edge-cases',
       'partial-slots',
     )
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that provided slots and default slots are correctly used
@@ -56,15 +49,11 @@ describe('Edge cases', () => {
       'edge-cases',
       'multiple-roots',
     )
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that multiple root elements are preserved
@@ -80,15 +69,11 @@ describe('Edge cases', () => {
       'edge-cases',
       'conditional-slot',
     )
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that slot is correctly expanded in conditional
@@ -100,15 +85,11 @@ describe('Edge cases', () => {
 
   test('should handle each loop in component', () => {
     const { pug, html: expectedHtml } = loadFixture('edge-cases', 'each-loop')
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that each loop correctly iterates and renders items
@@ -126,15 +107,11 @@ describe('Edge cases', () => {
       'edge-cases',
       'unless-condition',
     )
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that unless condition works correctly
@@ -144,15 +121,11 @@ describe('Edge cases', () => {
 
   test('should handle while loop in component', () => {
     const { pug, html: expectedHtml } = loadFixture('edge-cases', 'while-loop')
-
     const result = transform(pug, { output: 'html' })
 
     expect(result.html).toBeDefined()
     if (result.html && expectedHtml) {
-      const normalize = (str: string) =>
-        str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-      expect(normalize(result.html)).toBe(normalize(expectedHtml))
+      expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
     }
 
     // Verify that while loop correctly iterates

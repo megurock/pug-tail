@@ -13,6 +13,7 @@
 import { describe, expect, test } from 'vitest'
 import { transform } from '@/transform'
 import { loadFixture } from '../helpers/loadFixture.js'
+import { normalizeHTML } from '../helpers/normalizeHTML.js'
 
 describe('Control structures with components', () => {
   describe('Each loops', () => {
@@ -21,15 +22,11 @@ describe('Control structures with components', () => {
         'control-structures',
         'each-loop',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify components are expanded (no <Card> tags)
@@ -45,15 +42,11 @@ describe('Control structures with components', () => {
         'control-structures',
         'if-else',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify components are expanded
@@ -70,15 +63,11 @@ describe('Control structures with components', () => {
         'control-structures',
         'unless',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify components are expanded
@@ -94,15 +83,11 @@ describe('Control structures with components', () => {
         'control-structures',
         'case-when',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify components are expanded
@@ -121,15 +106,11 @@ describe('Control structures with components', () => {
         'control-structures',
         'while-loop',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify components are expanded
@@ -149,15 +130,11 @@ describe('Control structures with components', () => {
         'control-structures',
         'nested-each-if',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify components are expanded
@@ -177,15 +154,11 @@ describe('Control structures with components', () => {
         'control-structures',
         'complex-nesting',
       )
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
       if (result.html && expectedHtml) {
-        const normalize = (str: string) =>
-          str.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim()
-
-        expect(normalize(result.html)).toBe(normalize(expectedHtml))
+        expect(normalizeHTML(result.html)).toBe(normalizeHTML(expectedHtml))
       }
 
       // Verify components are expanded
@@ -202,7 +175,6 @@ describe('Control structures with components', () => {
   describe('Regression: Component definitions should be removed', () => {
     test('should not leave component definitions in output', () => {
       const { pug } = loadFixture('control-structures', 'each-loop')
-
       const result = transform(pug, { output: 'html' })
 
       // Verify component definitions are removed
@@ -227,7 +199,6 @@ if show
   each item in items
     Card(title=item)
 `
-
       const result = transform(pug, { output: 'html' })
 
       expect(result.html).toBeDefined()
