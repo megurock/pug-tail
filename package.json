@@ -32,7 +32,7 @@
     "pretest:coverage": "rimraf ./coverage",
     "test:coverage": "vitest run --coverage",
     "test:dev": "vitest --ui",
-    "check": "biome check && npm run check:types",
+    "check": "biome ci && npm run check:types",
     "check:format": "biome format",
     "check:lint": "biome lint",
     "check:types": "tsc --noEmit",

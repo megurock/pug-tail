@@ -246,3 +246,51 @@ export function findNode(
 ): Node | undefined {
   return block.nodes.find(predicate)
 }
+
+/**
+ * Asserts that a value is defined (not null or undefined).
+ * Throws an error if the value is null or undefined.
+ *
+ * This is useful for testing and situations where you expect a value to always be defined.
+ *
+ * @param value - The value to check.
+ * @param message - Optional error message.
+ * @returns The value if it is defined.
+ * @throws {Error} If the value is null or undefined.
+ *
+ * @example
+ * ```typescript
+ * const node = result.nodes.find(n => n.type === 'Tag')
+ * const tag = assertDefined(node, 'Expected to find a Tag node')
+ * // Now tag is guaranteed to be defined
+ * ```
+ */
+export function assertDefined<T>(
+  value: T | null | undefined,
+  message?: string,
+): T {
+  if (value === null || value === undefined) {
+    throw new Error(message ?? 'Expected value to be defined')
+  }
+  return value
+}
+
+/**
+ * Type guard that checks if a Tag has a block defined.
+ *
+ * @param tag - The Tag node to check.
+ * @returns True if the tag has a block defined.
+ *
+ * @example
+ * ```typescript
+ * if (hasBlock(tag)) {
+ *   // TypeScript knows tag.block is Block (not undefined)
+ *   for (const child of tag.block.nodes) {
+ *     // ...
+ *   }
+ * }
+ * ```
+ */
+export function hasBlock(tag: Tag): tag is Tag & { block: Block } {
+  return tag.block !== undefined
+}

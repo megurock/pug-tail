@@ -1,16 +1,16 @@
 /**
- * Integration tests for ASTTransformer.
+ * Integration tests for Transformer.
  *
  * Tests component expansion from actual Pug source code.
  */
 
 import { describe, expect, test } from 'vitest'
-import { ASTTransformer } from '@/core/astTransformer.js'
+import { Transformer } from '@/core/compiler/transformer.js'
 import { ComponentRegistry } from '@/core/componentRegistry.js'
-import { SlotResolver } from '@/core/slotResolver.js'
+import { ErrorHandler } from '@/core/errorHandler.js'
 import { parsePug } from '../helpers/parsePug.js'
 
-describe('ASTTransformer Integration', () => {
+describe('Transformer Integration', () => {
   test('should expand a simple component', () => {
     const source = `
 component Card()
@@ -30,8 +30,8 @@ Card()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 
@@ -69,8 +69,8 @@ Card()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 
@@ -96,8 +96,8 @@ Card()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 
@@ -115,8 +115,8 @@ Card()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     expect(() => {
       transformer.transform(ast)
@@ -147,8 +147,8 @@ Button()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 

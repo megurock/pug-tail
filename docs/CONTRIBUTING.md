@@ -41,7 +41,17 @@ pug-tail/
 │   │   ├── pathResolver.ts
 │   │   └── watcher.ts
 │   ├── core/              # Core transformation logic
-│   │   ├── astTransformer.ts
+│   │   ├── compiler/      # Visitor pattern infrastructure
+│   │   │   ├── traverser.ts       # Generic AST traversal
+│   │   │   ├── transformer.ts     # Pipeline orchestrator
+│   │   │   └── index.ts
+│   │   ├── visitors/      # Visitor implementations
+│   │   │   ├── visitor.ts             # Visitor interface
+│   │   │   ├── componentDetector.ts   # Component detection
+│   │   │   ├── componentExpander.ts   # Component expansion
+│   │   │   ├── definitionRemover.ts   # Cleanup
+│   │   │   ├── includeFlattener.ts    # Include/Extends flattening
+│   │   │   └── index.ts
 │   │   ├── componentRegistry.ts
 │   │   ├── errorHandler.ts
 │   │   └── slotResolver.ts
@@ -58,12 +68,14 @@ pug-tail/
 │       └── attributes/   # Attribute handling utilities
 ├── tests/                # Test files
 │   ├── unit/             # Unit tests
+│   │   └── visitors/     # Visitor unit tests
 │   ├── integration/      # Integration tests
 │   ├── e2e/              # End-to-end tests
 │   ├── fixtures/         # Test fixtures
 │   └── helpers/          # Test helpers
 ├── examples/             # Example projects
 └── docs/                 # Documentation
+    └── refactoring/      # Refactoring documentation
 ```
 
 ## Development Workflow
