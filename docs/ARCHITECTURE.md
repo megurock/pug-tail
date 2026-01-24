@@ -17,13 +17,15 @@ Parser (pug-parser)
     ↓
 Pug AST
     ↓
-Component Registry ← Detect and register component definitions
+Transformer Pipeline:
+  1. ComponentDetectorVisitor  ← Detect and register component definitions
+  2. ComponentExpanderVisitor  ← Inline expand component calls
+                               ← Replace slots with actual content
+                               ← Apply attribute categorization ($props/$attrs)
+                               ← Handle attribute fallthrough
+  3. DefinitionRemoverVisitor  ← Remove component definitions
+  4. IncludeFlattenerVisitor   ← Flatten Include/Extends nodes
     ↓
-AST Transformer   ← Inline expand component calls
-    ↓             ← Replace slots with actual content
-    ↓             ← Apply attribute categorization ($props/$attrs)
-    ↓             ← Handle attribute fallthrough
-    ↓             ← Validate scope isolation
 Pure Pug AST (no component/slot nodes)
     ↓
 Code Gen (pug-code-gen)
@@ -57,54 +59,152 @@ Registry stores:
 - Body: AST nodes representing `.card` structure
 - Slot information: `header`, `body`
 
-### 2. AST Transformer (`src/core/astTransformer.ts`)
+### 2. Transformation Pipeline (Visitor Pattern)
 
-**Purpose**: The main transformation engine that processes component calls and slots.
+**Purpose**: The main transformation engine using the visitor pattern.
+
+**Architecture**: Following [the-super-tiny-compiler](https://github.com/jamiebuilds/the-super-tiny-compiler) principles, pug-tail uses a visitor-based architecture where each transformation pass is a separate visitor.
+
+**Key components**:
+
+#### Traverser (`src/core/compiler/traverser.ts`)
+Generic AST traversal engine that visits each node and calls visitor methods.
+
+- Depth-first traversal of the AST
+- Supports enter/exit hooks for each node type
+- Handles node replacement and removal
+- Works with all Pug node types
+
+#### Transformer (`src/core/compiler/transformer.ts`)
+Orchestrates the visitor pipeline.
+
+**Pipeline stages**:
+1. **ComponentDetectorVisitor** - Detect and register components
+2. **ComponentExpanderVisitor** - Expand component calls
+3. **DefinitionRemoverVisitor** - Remove component definitions
+4. **IncludeFlattenerVisitor** - Flatten includes/extends
+
+**Example**:
+```typescript
+const transformer = new Transformer(registry, errorHandler, options)
+const transformedAst = transformer.transform(ast)
+```
+
+#### ComponentDetectorVisitor (`src/core/visitors/componentDetector.ts`)
+**Detects and registers component definitions**
 
 **Key responsibilities**:
-- Detect component calls (uppercase function calls like `Card()`)
-- Inline expand component bodies at call sites
-- Replace slot placeholders with actual content
-- Apply attribute categorization and fallthrough
+- Find `component` tags in the AST
+- Extract component metadata (name, slots, body)
+- Analyze usage patterns ($props/$attrs)
 - Validate scope isolation
-- Clean up temporary nodes
+- Register with ComponentRegistry
+- Handle Include/Extends recursively
+
+**Example transformation**:
+```pug
+// Input
+component Card()
+  .card
+    slot(header)
+    slot(body)
+
+// Registry stores:
+// - Name: "Card"
+// - Slots: ["header", "body"]
+// - Body: AST of .card structure
+```
+
+#### ComponentExpanderVisitor (`src/core/visitors/componentExpander.ts`)
+**Expands component calls by inlining their bodies**
+
+**Key responsibilities**:
+- Detect component calls (capitalized tags)
+- Clone component body
+- Extract provided slots
+- Inject attributes ($props/$attrs)
+- Replace slot definitions with provided content
+- Detect recursive calls
+- Handle nested component calls
 
 **Transformation phases**:
 
-#### Phase 1: Component Detection and Expansion
+**Phase 1: Component Call Detection**
 ```pug
 // Input
 Card(title="Hello")
   slot(body)
     p Content
 
-// Intermediate (after expansion)
-- const $props = { title: "Hello" }
-- const $attrs = {}
-.card
-  slot(header)  // Default slot content
-  slot(body)    // Will be replaced
+// Detected: Card is a component call
 ```
 
-#### Phase 2: Slot Resolution
+**Phase 2: Body Cloning and Injection**
 ```pug
-// After slot replacement
-- const $props = { title: "Hello" }
-- const $attrs = {}
-.card
-  // Default header
-  p Content  // Replaced slot(body)
+// After cloning and attribute injection
+{
+  - const $props = { title: "Hello" }
+  - const $attrs = {}
+  .card
+    slot(header)  // Default
+    slot(body)    // To be replaced
+}
 ```
 
-#### Phase 3: Attribute Categorization
-- Analyze `$props` destructuring to determine declared properties
-- Categorize component arguments into `$props` and `$attrs`
-- Generate appropriate JavaScript variable declarations
+**Phase 3: Slot Replacement**
+```pug
+// Final result
+{
+  - const $props = { title: "Hello" }
+  - const $attrs = {}
+  .card
+    // header slot uses default
+    p Content  // body slot replaced
+}
+```
 
-#### Phase 4: Attribute Fallthrough
-- Detect root elements in component body
-- Apply automatic attribute fallthrough if no manual `&attributes()` is used
-- Merge classes properly
+#### DefinitionRemoverVisitor (`src/core/visitors/definitionRemover.ts`)
+**Removes component definition nodes**
+
+**Key responsibilities**:
+- Identify `component` tags
+- Remove them from the AST
+- Clean up null nodes from blocks
+
+**Example**:
+```pug
+// Before
+component Card()
+  .card
+
+Card()
+
+// After (component definition removed)
+Card()  // Will be expanded
+```
+
+#### IncludeFlattenerVisitor (`src/core/visitors/includeFlattener.ts`)
+**Flattens Include and Extends nodes**
+
+**Key responsibilities**:
+- Replace Include nodes with their content
+- Replace Extends nodes with their content
+- Handle nested includes
+
+**Why needed**: pug-code-gen doesn't support Include/Extends nodes, so they must be flattened before code generation.
+
+**Example**:
+```pug
+// Before
+include components.pug  // Contains Card component
+Card()
+
+// After
+// (components.pug content inlined)
+component Card()
+  .card
+Card()
+```
 
 ### 3. Slot Resolver (`src/core/slotResolver.ts`)
 

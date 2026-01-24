@@ -6,9 +6,9 @@
 
 import generateCode from 'pug-code-gen'
 import { describe, expect, test } from 'vitest'
-import { ASTTransformer } from '../../src/core/astTransformer.js'
+import { Transformer } from '../../src/core/compiler/transformer.js'
 import { ComponentRegistry } from '../../src/core/componentRegistry.js'
-import { SlotResolver } from '../../src/core/slotResolver.js'
+import { ErrorHandler } from '../../src/core/errorHandler.js'
 import type { Block } from '../../src/types/pug.js'
 import { parsePug } from '../helpers/parsePug.js'
 
@@ -160,8 +160,8 @@ Card()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 
@@ -200,8 +200,8 @@ Card()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 
@@ -244,8 +244,8 @@ Card()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 
@@ -293,8 +293,8 @@ Button()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 
@@ -326,8 +326,8 @@ Card()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 
@@ -364,8 +364,8 @@ Container()
     const ast = parsePug(source)
 
     const registry = new ComponentRegistry()
-    const resolver = new SlotResolver()
-    const transformer = new ASTTransformer(registry, resolver)
+    const errorHandler = new ErrorHandler()
+    const transformer = new Transformer(registry, errorHandler)
 
     const transformed = transformer.transform(ast)
 

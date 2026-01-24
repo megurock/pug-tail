@@ -28,7 +28,7 @@ export interface Tag extends BaseNode {
   type: 'Tag'
   name: string
   selfClosing: boolean
-  block: Block
+  block?: Block
   attrs: Attribute[]
   attributeBlocks: AttributeBlock[]
   isInline: boolean
@@ -73,15 +73,15 @@ export interface Mixin extends BaseNode {
   type: 'Mixin'
   name: string
   args: string | null
-  block: Block
+  block?: Block
   call: boolean
 }
 
 export interface Conditional extends BaseNode {
   type: 'Conditional'
   test: string
-  consequent: Block
-  alternate: Block | Conditional | null
+  consequent?: Block
+  alternate?: Block | Conditional | null
 }
 
 export interface Each extends BaseNode {
@@ -89,26 +89,26 @@ export interface Each extends BaseNode {
   obj: string
   val: string
   key: string | null
-  block: Block
-  alternate: Block | null
+  block?: Block
+  alternate?: Block | null
 }
 
 export interface While extends BaseNode {
   type: 'While'
   test: string
-  block: Block
+  block?: Block
 }
 
 export interface Case extends BaseNode {
   type: 'Case'
   expr: string
-  block: Block
+  block?: Block
 }
 
 export interface When extends BaseNode {
   type: 'When'
   expr: string
-  block: Block
+  block?: Block
   debug: boolean
 }
 
@@ -124,14 +124,14 @@ export interface FileReference {
 
 export interface Include extends BaseNode {
   type: 'Include'
-  file: FileReference
-  block: Block | null
+  file: FileReference | null
+  block?: Block | null
 }
 
 export interface Extends extends BaseNode {
   type: 'Extends'
-  file: FileReference
-  block: Block
+  file: FileReference | null
+  block?: Block
 }
 
 export interface RawInclude extends BaseNode {
@@ -144,7 +144,7 @@ export interface InterpolatedTag extends BaseNode {
   type: 'InterpolatedTag'
   expr: string
   selfClosing: boolean
-  block: Block
+  block?: Block
   attrs: Attribute[]
   attributeBlocks: AttributeBlock[]
   isInline: boolean

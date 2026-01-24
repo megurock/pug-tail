@@ -9,10 +9,10 @@ import generateCode from 'pug-code-gen'
 import lex from 'pug-lexer'
 import load from 'pug-load'
 import parse from 'pug-parser'
-import { ASTTransformer } from '@/core/astTransformer.js'
+import { Transformer } from '@/core/compiler/transformer.js'
 import { ComponentRegistry } from '@/core/componentRegistry.js'
 import type { ErrorHandlerOptions } from '@/core/errorHandler.js'
-import { SlotResolver } from '@/core/slotResolver.js'
+import { ErrorHandler } from '@/core/errorHandler.js'
 import type { Block, Node } from '@/types/pug'
 import {
   detectDataFiles,
@@ -186,8 +186,8 @@ export function transform(
 
   // 3. Transformation (expand components and slots)
   const registry = new ComponentRegistry(errorHandlerOptions)
-  const resolver = new SlotResolver(errorHandlerOptions)
-  const transformer = new ASTTransformer(registry, resolver, {
+  const errorHandler = new ErrorHandler(errorHandlerOptions)
+  const transformer = new Transformer(registry, errorHandler, {
     ...errorHandlerOptions,
     validation: options.validation,
     debug,
